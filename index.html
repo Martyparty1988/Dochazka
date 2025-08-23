@@ -3,381 +3,259 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>WorkTime Tracker v4.0</title>
+    <title>WorkTime Tracker v5.1</title>
 
     <!-- PWA Meta Tags -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="WorkTime">
-    <meta name="theme-color" content="#0A0F1A">
+    <meta name="theme-color" content="#171717">
     
-    <!-- Nová Ikona Aplikace (Working Timer Style) -->
-    <link rel="icon" href="image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%230A0F1A' stroke='%2358A6FF' stroke-width='5'/%3E%3Cpath d='M50 20 L50 50 L70 60' stroke='%2358A6FF' stroke-width='5' stroke-linecap='round'/%3E%3Ccircle cx='50' cy='50' r='5' fill='%2358A6FF'/%3E%3Ctext x='50' y='90' font-size='20' fill='%2358A6FF' text-anchor='middle' font-family='Roboto Mono,monospace'%3EWT%3C/text%3E%3C/svg%3E">
-    <link rel="apple-touch-icon" href="image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='36' fill='%230A0F1A'/%3E%3Ccircle cx='90' cy='90' r='70' fill='none' stroke='%2358A6FF' stroke-width='10'/%3E%3Cpath d='M90 40 L90 90 L130 110' stroke='%2358A6FF' stroke-width='10' stroke-linecap='round'/%3E%3Ccircle cx='90' cy='90' r='8' fill='%2358A6FF'/%3E%3C/svg%3E">
+    <!-- App Icon -->
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%23171717'/%3E%3Ccircle cx='50' cy='50' r='38' fill='none' stroke='%2338bdf8' stroke-width='8'/%3E%3Cpath d='M50 25 V 50 H 70' fill='none' stroke='%23f8fafc' stroke-width='8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='40' fill='%23171717'/%3E%3Ccircle cx='90' cy='90' r='68' fill='none' stroke='%2338bdf8' stroke-width='12'/%3E%3Cpath d='M90 45 V 90 H 125' fill='none' stroke='%23f8fafc' stroke-width='12' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
     <link rel="manifest" id="manifest">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
     <style>
         :root {
-            --bg: #0A0F1A;
-            --card: rgba(22, 27, 34, 0.85);
-            --text: #E6EDF3;
-            --text-secondary: #8B949E;
-            --primary: #58A6FF;
-            --accent: #39D353;
-            --danger: #F85149;
-            --shadow: 0 4px 20px rgba(0,0,0,0.3);
-            --neumorph: inset 4px 4px 8px rgba(0,0,0,0.2), inset -4px -4px 8px rgba(255,255,255,0.05);
-            --glow: 0 0 12px var(--primary);
             --safe-area-top: env(safe-area-inset-top);
             --safe-area-bottom: env(safe-area-inset-bottom);
         }
-
-        body.light-mode {
-            --bg: #F0F6FC;
-            --card: rgba(255,255,255,0.9);
-            --text: #0D1117;
-            --text-secondary: #656D76;
-            --primary: #1F6FEB;
-            --accent: #238636;
-            --danger: #CF222E;
-            --shadow: 0 4px 20px rgba(0,0,0,0.1);
-            --neumorph: inset 4px 4px 8px rgba(0,0,0,0.05), inset -4px -4px 8px rgba(255,255,255,0.2);
-            --glow: none;
-        }
-
-        html { box-sizing: border-box; font-family: 'Roboto Mono', monospace; }
-        *, *:before, *:after { box-sizing: inherit; }
+        html { font-family: 'Inter', sans-serif; }
         body {
-            margin: 0; background: var(--bg); color: var(--text);
-            padding: var(--safe-area-top) 0 var(--safe-area-bottom) 0;
-            overflow: hidden; height: 100vh; transition: all 0.3s ease;
+            padding-top: var(--safe-area-top);
+            padding-bottom: var(--safe-area-bottom);
         }
-
-        .background-gradient {
-            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-            background: linear-gradient(135deg, var(--primary) 0%, var(--bg) 100%);
-            opacity: 0.1; z-index: -1;
+        .timer-glow {
+            box-shadow: 0 0 40px 0 rgba(56, 189, 248, 0.4);
         }
-
-        .app-container {
-            display: flex; flex-direction: column; height: 100vh;
-            max-width: 600px; margin: 0 auto; padding: 20px;
+        .modal-backdrop-custom {
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
         }
-
-        .app-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .greeting { font-size: 1.3rem; font-weight: 700; text-shadow: var(--glow); }
-
-        .user-switcher { display: flex; background: var(--card); padding: 4px; border-radius: 50px; box-shadow: var(--neumorph); }
-        .user-btn { padding: 8px 16px; border-radius: 50px; background: none; border: none; color: var(--text); font-weight: 700; cursor: pointer; transition: all 0.3s; }
-        .user-btn.active { background: linear-gradient(45deg, var(--primary), var(--accent)); color: #fff; box-shadow: var(--glow); }
-
-        .header-icon-btn { background: var(--card); border: none; padding: 8px; border-radius: 50%; box-shadow: var(--neumorph); cursor: pointer; transition: all 0.3s; }
-        .header-icon-btn:hover { box-shadow: var(--glow); transform: scale(1.1); }
-        .header-icon-btn svg { width: 24px; height: 24px; fill: var(--text-secondary); }
-
-        .timer-card { position: relative; background: var(--card); border-radius: 24px; padding: 32px; text-align: center; box-shadow: var(--shadow), var(--neumorph); margin-bottom: 24px; backdrop-filter: blur(12px); }
-        .progress-ring { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 200px; height: 200px; }
-        .progress-ring circle { transition: stroke-dashoffset 0.35s; transform: rotate(-90deg); transform-origin: 50% 50%; }
-
-        .timer-display { font-size: 4rem; font-weight: 700; text-shadow: var(--glow); position: relative; z-index: 1; }
-        .live-earnings { font-size: 1.4rem; color: var(--accent); font-weight: 700; margin: 8px 0; text-shadow: var(--glow); }
-
-        .timer-controls { display: flex; justify-content: center; gap: 16px; align-items: center; }
-        .timer-btn { padding: 16px 32px; border-radius: 50px; border: none; font-weight: 700; cursor: pointer; transition: all 0.3s; box-shadow: var(--shadow); color: #fff; }
-        .start-btn { background: linear-gradient(45deg, var(--accent), #1f9a55); }
-        .stop-btn { background: linear-gradient(45deg, var(--danger), #c43e37); }
-        .retro-btn { background: var(--primary); padding: 8px 16px; border-radius: 50px; font-size: 0.9rem; }
-
-        .retro-input { display: none; padding: 12px; border-radius: 12px; border: 1px solid var(--primary); background: var(--bg); color: var(--text); width: 120px; }
-
-        .stats-container { flex-grow: 1; overflow-y: auto; }
-        .stats-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-        .stats-title { font-size: 1.2rem; font-weight: 700; }
-
-        .view-switcher { display: flex; background: var(--card); padding: 4px; border-radius: 50px; box-shadow: var(--neumorph); }
-        .view-btn { padding: 6px 12px; border-radius: 50px; background: none; border: none; color: var(--text-secondary); font-weight: 700; cursor: pointer; transition: all 0.3s; }
-        .view-btn.active { background: var(--primary); color: #fff; box-shadow: var(--glow); }
-
-        .summary-card { display: flex; justify-content: space-around; background: var(--card); border-radius: 16px; padding: 24px; box-shadow: var(--shadow); margin-bottom: 24px; }
-        .summary-item { text-align: center; }
-        .summary-item h3 { font-size: 0.9rem; color: var(--text-secondary); }
-        .summary-item p { font-size: 1.8rem; font-weight: 700; }
-
-        .entry-list { list-style: none; padding: 0; }
-        .entry-item { display: flex; justify-content: space-between; align-items: center; padding: 16px; background: var(--card); border-radius: 16px; margin-bottom: 12px; box-shadow: var(--neumorph); transition: all 0.3s; }
-        .entry-item:hover { box-shadow: var(--glow); }
-        .entry-details { flex-grow: 1; }
-        .entry-date { font-weight: 700; }
-        .entry-time { font-size: 0.9rem; color: var(--text-secondary); }
-        .entry-duration { font-size: 1.25rem; font-weight: 700; color: var(--primary); }
-        .delete-btn { background: none; border: none; cursor: pointer; }
-
-        .app-footer { display: flex; justify-content: center; gap: 16px; padding: 20px 0; }
-        .footer-btn { padding: 10px 20px; border-radius: 50px; background: var(--primary); color: #fff; border: none; font-weight: 700; cursor: pointer; box-shadow: var(--shadow); transition: all 0.3s; }
-        .footer-btn:hover { box-shadow: var(--glow); transform: scale(1.05); }
-
-        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; z-index: 1000; backdrop-filter: blur(5px); }
-        .modal-overlay.visible { display: flex; }
-        .modal-content { background: var(--card); padding: 24px; border-radius: 24px; width: 90%; max-width: 400px; box-shadow: var(--shadow); }
-        .modal-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px; }
-        .modal-btn { padding: 10px 20px; border-radius: 50px; border: none; font-weight: 700; cursor: pointer; }
-        .modal-btn.primary { background: var(--primary); color: #fff; }
-        .modal-btn.secondary { background: var(--text-secondary); color: var(--text); }
-        .modal-input-group { margin-bottom: 16px; }
-        .modal-input-group label { display: block; margin-bottom: 4px; color: var(--text-secondary); }
-        .modal-input-group input { width: 100%; padding: 10px; border-radius: 12px; border: 1px solid var(--primary); background: var(--bg); color: var(--text); }
+        .entry-list::-webkit-scrollbar { display: none; }
+        .entry-list { -ms-overflow-style: none; scrollbar-width: none; }
+        .user-btn.timer-running::after {
+            content: '';
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            width: 8px;
+            height: 8px;
+            background-color: #22c55e; /* green-500 */
+            border-radius: 50%;
+            border: 1px solid #171717;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
     </style>
 </head>
-<body>
-    <div class="background-gradient"></div>
-    <div class="app-container">
-        <header class="app-header">
-            <h1 class="greeting" id="greeting"></h1>
-            <div class="header-controls" style="display: flex; gap: 8px;">
-                <div class="user-switcher" id="user-switcher"></div>
-                <button class="header-icon-btn" id="settings-btn" aria-label="Nastavení"></button>
-                <button class="header-icon-btn" id="theme-switcher" aria-label="Přepnout motiv"></button>
+<body class="bg-neutral-900 text-slate-50 antialiased overflow-hidden h-screen transition-colors duration-300">
+    <div id="app-container" class="relative h-full w-full max-w-lg mx-auto flex flex-col transition-all duration-300">
+        
+        <!-- Header -->
+        <header class="px-4 pt-4 pb-2 flex justify-between items-center">
+            <div>
+                <h1 id="greeting" class="text-2xl font-bold text-slate-200"></h1>
+                <p class="text-sm text-sky-400 font-medium">Přehled dnešního dne</p>
             </div>
+            <div id="user-switcher" class="flex items-center bg-neutral-800 rounded-full p-1 space-x-1"></div>
         </header>
 
-        <main>
-            <div class="timer-card">
-                <svg class="progress-ring" viewBox="0 0 200 200">
-                    <circle cx="100" cy="100" r="90" fill="transparent" stroke="rgba(88,166,255,0.2)" stroke-width="10"/>
-                    <circle id="progress-circle" cx="100" cy="100" r="90" fill="transparent" stroke="var(--accent)" stroke-width="10" stroke-dasharray="565" stroke-dashoffset="565"/>
-                </svg>
-                <h2 class="timer-display" id="timer-display">00:00:00</h2>
-                <p class="live-earnings" id="live-earnings"></p>
-                <div class="timer-controls">
-                    <button class="timer-btn retro-btn" id="retro-toggle">Zpětný Start</button>
-                    <input type="time" id="retro-start-input" class="retro-input">
-                    <button class="timer-btn start-btn" id="start-stop-btn">Start</button>
-                </div>
-            </div>
-
-            <div class="stats-container">
-                <div class="stats-header">
-                    <h2 class="stats-title">Přehled</h2>
-                    <div class="view-switcher" id="view-switcher">
-                        <button class="view-btn active" data-view="day">Den</button>
-                        <button class="view-btn" data-view="week">Týden</button>
-                        <button class="view-btn" data-view="month">Měsíc</button>
+        <!-- Main Content -->
+        <main class="flex-1 flex flex-col px-4 overflow-hidden">
+            <!-- Timer Card -->
+            <div id="timer-card" class="relative flex flex-col items-center justify-center bg-neutral-800/50 rounded-3xl p-6 my-4 transition-all duration-300">
+                <div class="relative w-52 h-52">
+                    <svg class="absolute inset-0" viewBox="0 0 100 100">
+                        <circle class="text-neutral-700/50" stroke-width="8" stroke="currentColor" fill="transparent" r="45" cx="50" cy="50"/>
+                        <circle id="progress-circle" class="text-sky-400 transition-all duration-500" stroke-width="8" stroke-linecap="round" stroke="currentColor" fill="transparent" r="45" cx="50" cy="50" style="transform: rotate(-90deg); transform-origin: 50% 50%;" stroke-dasharray="283" stroke-dashoffset="283"/>
+                    </svg>
+                    <div class="absolute inset-0 flex flex-col items-center justify-center">
+                        <h2 id="timer-display" class="text-5xl font-extrabold tracking-tighter text-slate-50">00:00</h2>
+                        <p id="timer-seconds" class="text-2xl font-bold text-neutral-500 -mt-2">00</p>
+                        <p id="live-earnings" class="text-lg font-semibold text-green-400 mt-1"></p>
                     </div>
                 </div>
-                
-                <div class="summary-card">
-                    <div class="summary-item"><h3>Odpracováno</h3><p id="summary-time">0h 0m</p></div>
-                    <div class="summary-item"><h3>Výdělek</h3><p id="summary-earnings">0 Kč</p></div>
-                    <div class="summary-item"><h3>Průměr/den</h3><p id="summary-average">0 Kč</p></div>
+                 <div class="flex items-center gap-3 mt-4">
+                    <button id="retro-toggle" class="h-10 px-4 flex items-center justify-center bg-neutral-700 hover:bg-neutral-600 text-slate-300 rounded-full text-sm font-medium transition-all">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1.5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm.707-10.293a1 1 0 00-1.414-1.414l-3 3a1 1 0 000 1.414l3 3a1 1 0 001.414-1.414L9.414 11H13a1 1 0 100-2H9.414l1.293-1.293z" clip-rule="evenodd" /></svg>
+                        Zpětně
+                    </button>
+                    <input type="time" id="retro-start-input" class="hidden h-10 w-28 bg-neutral-900 border border-neutral-700 rounded-full text-center text-slate-200 focus:ring-2 focus:ring-sky-400 focus:outline-none">
+                    <button id="start-stop-btn" class="relative w-40 h-14 rounded-full text-lg font-bold transition-all duration-300 overflow-hidden">
+                        <span class="absolute inset-0 flex items-center justify-center">Start</span>
+                    </button>
                 </div>
-
-                <ul class="entry-list" id="entry-list"></ul>
+            </div>
+            
+            <!-- Stats -->
+            <div class="flex-1 flex flex-col min-h-0">
+                <div class="flex items-center justify-between mb-3">
+                    <h3 class="text-lg font-bold text-slate-200">Historie</h3>
+                    <div id="view-switcher" class="flex items-center bg-neutral-800 rounded-full p-1 text-sm"></div>
+                </div>
+                <ul id="entry-list" class="space-y-3 overflow-y-auto pb-24">
+                    <!-- Entries will be rendered here -->
+                </ul>
             </div>
         </main>
-        
-        <footer class="app-footer">
-            <button class="footer-btn" id="manual-entry-btn">Přidat ručně</button>
-            <button class="footer-btn" id="export-btn">Exportovat (CSV)</button>
-            <button class="footer-btn" id="backup-btn">Záloha (JSON)</button>
+
+        <!-- Footer Navigation -->
+        <footer class="absolute bottom-0 left-0 right-0 bg-neutral-800/50 backdrop-blur-lg border-t border-neutral-700/50" style="padding-bottom: var(--safe-area-bottom);">
+            <nav class="flex justify-around items-center h-16 max-w-lg mx-auto">
+                <button id="manual-entry-btn" class="flex flex-col items-center text-neutral-400 hover:text-sky-400 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
+                    <span class="text-xs font-medium">Přidat</span>
+                </button>
+                <button id="export-btn" class="flex flex-col items-center text-neutral-400 hover:text-sky-400 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
+                    <span class="text-xs font-medium">Export</span>
+                </button>
+                 <button id="settings-btn" class="flex flex-col items-center text-neutral-400 hover:text-sky-400 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                    <span class="text-xs font-medium">Nastavení</span>
+                </button>
+            </nav>
         </footer>
     </div>
     
     <!-- Modals -->
-    <div id="settings-modal" class="modal-overlay">
-        <div class="modal-content">
-            <h2>Nastavení</h2>
-            <div class="modal-input-group">
-                <label for="hourly-rate-input">Hodinová sazba (Kč)</label>
-                <input type="number" id="hourly-rate-input" placeholder="250">
-            </div>
-            <div class="modal-input-group">
-                <label for="daily-goal-input">Denní cíl (hodiny)</label>
-                <input type="number" step="0.5" id="daily-goal-input" placeholder="8">
-            </div>
-            <div class="modal-actions">
-                <button class="modal-btn secondary" id="settings-cancel">Zrušit</button>
-                <button class="modal-btn primary" id="settings-save">Uložit</button>
-            </div>
-        </div>
-    </div>
-    <div id="manual-entry-modal" class="modal-overlay">
-        <div class="modal-content">
-            <h2>Ruční zadání</h2>
-            <form id="manual-entry-form">
-                <div class="modal-input-group">
-                    <label for="manual-date">Datum</label>
-                    <input type="date" id="manual-date" required>
-                </div>
-                <div class="modal-input-group">
-                    <label for="manual-duration">Doba (např. 2:30, 90m)</label>
-                    <input type="text" id="manual-duration" placeholder="2:30" required>
-                </div>
-                <div class="modal-actions">
-                    <button type="button" class="modal-btn secondary" id="manual-cancel">Zrušit</button>
-                    <button type="submit" class="modal-btn primary">Uložit</button>
-                </div>
-            </form>
-        </div>
-    </div>
-    <div id="confirm-delete-modal" class="modal-overlay">
-        <div class="modal-content">
-            <h2>Smazat záznam?</h2>
-            <p>Tato akce je nevratná.</p>
-            <div class="modal-actions">
-                <button class="modal-btn secondary" id="delete-cancel">Zrušit</button>
-                <button class="modal-btn primary" id="delete-confirm" style="background: var(--danger);">Smazat</button>
-            </div>
-        </div>
+    <div id="modal-container" class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop-custom bg-black/50 hidden">
+        <!-- Modal content will be injected here -->
     </div>
     
     <script>
+        // --- CONFIG & STATE ---
         const USERS = ['Marty', 'Čenda', 'Kuba'];
-        const DB_KEY = 'workTimeTrackerData_v4.0';
+        const DB_KEY = 'workTimeTrackerData_v5.1';
         let state = {};
-        let deleteResolver = null;
+        let modalResolver = null;
+        let globalTickInterval = null;
 
-        // Icons (SVG)
-        const sunIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z"/></svg>`;
-        const moonIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z"/></svg>`;
-        const settingsIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.438.995s.145.755.438.995l1.003.827c.446.367.533.98.26 1.431l-1.296 2.247a1.125 1.125 0 01-1.37.49l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.063-.374-.313-.686-.645-.87a6.52 6.52 0 01-.22-.127c-.324-.196-.72-.257-1.075-.124l-1.217.456a1.125 1.125 0 01-1.37-.49l-1.296-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.437-.995s-.145-.755-.437-.995l-1.004-.827a1.125 1.125 0 01-.26-1.431l1.296-2.247a1.125 1.125 0 011.37-.49l1.217.456c.355.133.75.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z"/><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>`;
-        const deleteIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.134-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.067-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"/></svg>`;
+        // --- ICONS (SVG) ---
+        const deleteIcon = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>`;
+        const noEntriesIcon = `<svg class="w-16 h-16 text-neutral-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>`;
 
-        // DOM Elements
+        // --- DOM ELEMENTS ---
         const elements = {
+            appContainer: document.getElementById('app-container'),
             greeting: document.getElementById('greeting'),
             userSwitcher: document.getElementById('user-switcher'),
-            themeSwitcher: document.getElementById('theme-switcher'),
-            settingsBtn: document.getElementById('settings-btn'),
             timerDisplay: document.getElementById('timer-display'),
+            timerSeconds: document.getElementById('timer-seconds'),
             liveEarnings: document.getElementById('live-earnings'),
             startStopBtn: document.getElementById('start-stop-btn'),
             retroToggle: document.getElementById('retro-toggle'),
             retroInput: document.getElementById('retro-start-input'),
             viewSwitcher: document.getElementById('view-switcher'),
-            summaryTime: document.getElementById('summary-time'),
-            summaryEarnings: document.getElementById('summary-earnings'),
-            summaryAverage: document.getElementById('summary-average'),
             entryList: document.getElementById('entry-list'),
-            exportBtn: document.getElementById('export-btn'),
-            backupBtn: document.getElementById('backup-btn'),
-            manualEntryBtn: document.getElementById('manual-entry-btn'),
             progressCircle: document.getElementById('progress-circle'),
-            settingsModal: document.getElementById('settings-modal'),
-            manualModal: document.getElementById('manual-entry-modal'),
-            deleteModal: document.getElementById('confirm-delete-modal')
+            modalContainer: document.getElementById('modal-container'),
+            settingsBtn: document.getElementById('settings-btn'),
+            manualEntryBtn: document.getElementById('manual-entry-btn'),
+            exportBtn: document.getElementById('export-btn'),
         };
 
-        // Init
+        // --- INITIALIZATION ---
         function init() {
             loadState();
             setupPWA();
             setupEventListeners();
             setupUserSwitcher();
             updateUI();
-            document.addEventListener('visibilitychange', handleVisibilityChange);
+            startGlobalTicker();
+            Notification.requestPermission();
         }
 
-        // State Management
+        // --- STATE MANAGEMENT ---
         function loadState() {
             const saved = JSON.parse(localStorage.getItem(DB_KEY));
             const defaultState = {
                 currentUser: USERS[0],
                 currentView: 'day',
                 users: USERS.reduce((acc, user) => {
-                    acc[user] = { timer: { startTime: null, intervalId: null }, entries: [], settings: { rate: 250, dailyGoal: 8 } };
+                    acc[user] = { 
+                        timer: { startTime: null }, 
+                        entries: [], 
+                        settings: { rate: 250, dailyGoal: 8 } 
+                    };
                     return acc;
                 }, {}),
-                globalSettings: { theme: window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light' }
             };
-            state = { ...defaultState, ...safeMerge(saved, defaultState) };
-            resumeUserTimer();
+            state = deepMerge(defaultState, saved || {});
         }
-
-        function safeMerge(saved, defaultObj) {
-            if (!saved) return {};
-            const merged = {};
-            for (const key in defaultObj) {
-                merged[key] = typeof saved[key] === 'object' ? safeMerge(saved[key], defaultObj[key]) : (saved[key] ?? defaultObj[key]);
+        
+        function deepMerge(target, source) {
+            for (const key in source) {
+                if (source[key] && typeof source[key] === 'object' && !Array.isArray(source[key])) {
+                    target[key] = deepMerge(target[key] || {}, source[key]);
+                } else {
+                    target[key] = source[key];
+                }
             }
-            return merged;
+            return target;
         }
 
         function saveState() {
             localStorage.setItem(DB_KEY, JSON.stringify(state));
         }
 
-        // PWA Setup
+        // --- PWA SETUP ---
         function setupPWA() {
             const manifest = {
-                "name": "WorkTime Tracker",
-                "short_name": "WorkTime",
-                "start_url": ".",
-                "display": "standalone",
-                "background_color": "#0A0F1A",
-                "theme_color": "#58A6FF",
-                "icons": [{
-                    "src": "image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Ccircle cx='256' cy='256' r='230' fill='%230A0F1A' stroke='%2358A6FF' stroke-width='20'/%3E%3Cpath d='M256 100 L256 256 L370 310' stroke='%2358A6FF' stroke-width='30' stroke-linecap='round'/%3E%3Ccircle cx='256' cy='256' r='20' fill='%2358A6FF'/%3E%3C/svg%3E",
-                    "sizes": "512x512",
-                    "type": "image/svg+xml"
-                }]
+                "name": "WorkTime Tracker", "short_name": "WorkTime", "start_url": ".",
+                "display": "standalone", "background_color": "#171717", "theme_color": "#38bdf8",
+                "icons": [{"src": document.querySelector('link[rel="apple-touch-icon"]').href, "sizes": "180x180", "type": "image/svg+xml"}]
             };
-            document.getElementById('manifest').href = `application/manifest+json,${encodeURIComponent(JSON.stringify(manifest))}`;
+            document.getElementById('manifest').href = `data:application/manifest+json,${encodeURIComponent(JSON.stringify(manifest))}`;
 
             if ('serviceWorker' in navigator) {
                 const swCode = `
-                    const CACHE_NAME = 'worktime-v4.0';
-                    self.addEventListener('install', e => e.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(['/']))));
+                    const CACHE_NAME = 'worktime-v5.1';
+                    self.addEventListener('install', e => e.waitUntil(caches.open(CACHE_NAME)));
                     self.addEventListener('fetch', e => e.respondWith(caches.match(e.request).then(res => res || fetch(e.request))));
                     self.addEventListener('activate', e => e.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k))))));
                 `;
-                const blob = new Blob([swCode], { type: 'application/javascript' });
-                navigator.serviceWorker.register(URL.createObjectURL(blob));
+                navigator.serviceWorker.register(`data:application/javascript,${encodeURIComponent(swCode)}`).catch(console.error);
             }
         }
 
-        // Event Listeners
+        // --- EVENT LISTENERS ---
         function setupEventListeners() {
             elements.userSwitcher.addEventListener('click', handleUserSwitch);
-            elements.themeSwitcher.addEventListener('click', toggleTheme);
             elements.startStopBtn.addEventListener('click', handleStartStop);
             elements.retroToggle.addEventListener('click', toggleRetroInput);
             elements.viewSwitcher.addEventListener('click', handleViewSwitch);
             elements.entryList.addEventListener('click', handleDeleteClick);
-            elements.exportBtn.addEventListener('click', exportToCSV);
-            elements.backupBtn.addEventListener('click', handleBackup);
             elements.settingsBtn.addEventListener('click', openSettings);
             elements.manualEntryBtn.addEventListener('click', openManualEntry);
-            document.getElementById('settings-save').addEventListener('click', saveSettings);
-            document.getElementById('settings-cancel').addEventListener('click', () => elements.settingsModal.classList.remove('visible'));
-            document.getElementById('manual-entry-form').addEventListener('submit', handleManualSubmit);
-            document.getElementById('manual-cancel').addEventListener('click', () => elements.manualModal.classList.remove('visible'));
-            document.getElementById('delete-confirm').addEventListener('click', () => { deleteResolver?.(true); });
-            document.getElementById('delete-cancel').addEventListener('click', () => { deleteResolver?.(false); });
+            elements.exportBtn.addEventListener('click', exportToCSV);
         }
 
-        function setupUserSwitcher() {
-            elements.userSwitcher.innerHTML = USERS.map(user => `<button class="user-btn" data-user="${user}">${user}</button>`).join('');
-        }
-
-        // Handlers
+        // --- HANDLERS ---
         function handleUserSwitch(e) {
             const btn = e.target.closest('.user-btn');
-            if (btn) {
-                vibrate();
-                const newUser = btn.dataset.user;
-                if (state.currentUser !== newUser && getUserTimer().intervalId) {
-                    if (!confirm('Přepnutí uživatele zastaví aktuální timer. Pokračovat?')) return;
-                    stopTimer();
-                }
-                state.currentUser = newUser;
-                updateUI();
-                saveState();
-            }
+            if (!btn) return;
+
+            vibrate();
+            const newUser = btn.dataset.user;
+            if (state.currentUser === newUser) return;
+
+            state.currentUser = newUser;
+            updateUI(); // Update main view for the new user
+            saveState();
         }
 
         function handleViewSwitch(e) {
@@ -391,33 +269,15 @@
 
         function handleStartStop() {
             vibrate(100);
-            const timer = getUserTimer();
-            if (timer.intervalId) {
-                stopTimer();
-            } else {
-                startTimer();
-            }
+            getUserTimer().startTime ? stopTimer() : startTimer();
         }
 
         function toggleRetroInput() {
             vibrate();
-            const isVisible = elements.retroInput.style.display === 'block';
-            elements.retroInput.style.display = isVisible ? 'none' : 'block';
-            elements.retroToggle.textContent = isVisible ? 'Zpětný Start' : 'Zrušit Zpětný';
-        }
-
-        function handleManualSubmit(e) {
-            e.preventDefault();
-            vibrate();
-            const date = document.getElementById('manual-date').value;
-            const durationStr = document.getElementById('manual-duration').value;
-            const durationMs = parseDuration(durationStr);
-            if (durationMs <= 0) return alert('Neplatná doba.');
-            const end = new Date(`${date}T23:59:59`).getTime();
-            const start = end - durationMs;
-            addEntry(start, end);
-            elements.manualModal.classList.remove('visible');
-            updateUI();
+            const isVisible = !elements.retroInput.classList.contains('hidden');
+            elements.retroInput.classList.toggle('hidden', isVisible);
+            elements.retroToggle.classList.toggle('bg-sky-500', !isVisible);
+            elements.retroToggle.classList.toggle('text-white', !isVisible);
         }
 
         async function handleDeleteClick(e) {
@@ -425,253 +285,311 @@
             if (btn) {
                 vibrate();
                 const id = btn.dataset.id;
-                elements.deleteModal.classList.add('visible');
-                const confirmed = await new Promise(res => deleteResolver = res);
-                elements.deleteModal.classList.remove('visible');
+                const confirmed = await showModal({
+                    title: 'Smazat záznam?',
+                    message: 'Tato akce je nevratná a záznam bude trvale odstraněn.',
+                    confirmText: 'Smazat',
+                    confirmClass: 'bg-red-600 hover:bg-red-700',
+                });
                 if (confirmed) {
                     getUserData().entries = getUserData().entries.filter(e => e.id !== id);
                     saveState();
                     updateUI();
                 }
-                deleteResolver = null;
             }
         }
+        
+        // --- TIMER LOGIC ---
+        const getUserData = (user = state.currentUser) => state.users[user];
+        const getUserTimer = (user = state.currentUser) => getUserData(user).timer;
+        const getUserSettings = (user = state.currentUser) => getUserData(user).settings;
 
-        function handleBackup() {
-            vibrate();
-            const action = confirm('Exportovat (stáhnout) nebo importovat (nahrávat)?') ? 'export' : 'import';
-            if (action === 'export') {
-                const json = JSON.stringify(state);
-                const link = document.createElement('a');
-                link.href = `text/json;charset=utf-8,${encodeURIComponent(json)}`;
-                link.download = `worktime_backup_${new Date().toISOString()}.json`;
-                link.click();
-            } else {
-                const input = document.createElement('input');
-                input.type = 'file';
-                input.accept = '.json';
-                input.onchange = e => {
-                    const file = e.target.files[0];
-                    const reader = new FileReader();
-                    reader.onload = ev => {
-                        try {
-                            state = JSON.parse(ev.target.result);
-                            saveState();
-                            updateUI();
-                            alert('Data importována úspěšně.');
-                        } catch (err) {
-                            alert('Chyba při importu.');
-                        }
-                    };
-                    reader.readAsText(file);
-                };
-                input.click();
-            }
+        function startGlobalTicker() {
+            if (globalTickInterval) clearInterval(globalTickInterval);
+            globalTickInterval = setInterval(() => {
+                // Update display only for the current user
+                updateTimerDisplay();
+                // Update indicators for all users
+                updateUserSwitcherIndicators();
+            }, 1000);
         }
-
-        function handleVisibilityChange() {
-            if (document.hidden && getUserTimer().intervalId) {
-                stopTimer(); // Auto-pauza při minimalizaci
-                notify('Timer byl pozastaven kvůli nečinnosti.');
-            }
-        }
-
-        // Timer Logic
-        function getUserData() { return state.users[state.currentUser]; }
-        function getUserTimer() { return getUserData().timer; }
-        function getUserSettings() { return getUserData().settings; }
 
         function startTimer() {
             let startTime = Date.now();
-            if (elements.retroInput.value && elements.retroInput.style.display === 'block') {
+            if (!elements.retroInput.classList.contains('hidden') && elements.retroInput.value) {
                 const [h, m] = elements.retroInput.value.split(':').map(Number);
                 const retro = new Date();
                 retro.setHours(h, m, 0, 0);
                 if (retro > new Date()) retro.setDate(retro.getDate() - 1);
                 startTime = retro.getTime();
             }
-            const timer = getUserTimer();
-            timer.startTime = startTime;
-            timer.intervalId = setInterval(updateTimer, 1000);
+            getUserTimer().startTime = startTime;
             updateTimerButton(true);
             saveState();
         }
 
-        function resumeUserTimer() {
-            const timer = getUserTimer();
-            if (timer.startTime) {
-                timer.intervalId = setInterval(updateTimer, 1000);
-                updateTimerButton(true);
-            }
-        }
-
         function stopTimer() {
             const timer = getUserTimer();
+            if (!timer.startTime) return;
             const endTime = Date.now();
+            
             addEntry(timer.startTime, endTime);
-            clearInterval(timer.intervalId);
-            timer.intervalId = null;
+            
             timer.startTime = null;
+            
             elements.retroInput.value = '';
-            elements.retroInput.style.display = 'none';
-            elements.retroToggle.textContent = 'Zpětný Start';
-            elements.liveEarnings.textContent = '';
+            elements.retroInput.classList.add('hidden');
+            elements.retroToggle.classList.remove('bg-sky-500', 'text-white');
+            
             updateTimerButton(false);
-            elements.timerDisplay.textContent = '00:00:00';
-            elements.progressCircle.style.strokeDashoffset = 565;
+            updateTimerDisplay(); // Reset display to 0
+            
             saveState();
             updateUI();
             notify(`Čas zastaven: ${formatDuration(endTime - timer.startTime, 'hm')}`);
         }
 
-        function updateTimer() {
-            const timer = getUserTimer();
-            if (!timer.startTime) return;
-            const elapsed = Date.now() - timer.startTime;
-            const hours = elapsed / 3600000;
-            const earnings = hours * getUserSettings().rate;
-            elements.timerDisplay.textContent = formatDuration(elapsed);
-            elements.liveEarnings.textContent = `${earnings.toLocaleString('cs-CZ', {style: 'currency', currency: 'CZK'})}`;
-            updateProgress(hours);
-        }
-
-        function updateProgress(hours) {
-            const goal = getUserSettings().dailyGoal;
-            const progress = Math.min(hours / goal, 1);
-            elements.progressCircle.style.strokeDashoffset = 565 * (1 - progress);
-            if (progress >= 1) notify('Denní cíl dosažen!');
-        }
-
         function addEntry(start, end) {
             const duration = end - start;
+            if (duration < 1000) return; // Don't save entries less than a second
             getUserData().entries.push({ id: `entry_${Date.now()}`, start, end, duration });
-            saveState();
         }
 
-        // Modals
-        function openSettings() {
-            vibrate();
-            const settings = getUserSettings();
-            document.getElementById('hourly-rate-input').value = settings.rate;
-            document.getElementById('daily-goal-input').value = settings.dailyGoal;
-            elements.settingsModal.classList.add('visible');
-        }
-
-        function saveSettings() {
-            vibrate();
-            const rate = parseFloat(document.getElementById('hourly-rate-input').value);
-            const goal = parseFloat(document.getElementById('daily-goal-input').value);
-            if (rate > 0 && goal > 0) {
-                const settings = getUserSettings();
-                settings.rate = rate;
-                settings.dailyGoal = goal;
-                saveState();
-                updateUI();
-                elements.settingsModal.classList.remove('visible');
-            } else {
-                alert('Zadejte platné hodnoty.');
-            }
-        }
-
-        function openManualEntry() {
-            vibrate();
-            document.getElementById('manual-date').valueAsDate = new Date();
-            elements.manualModal.classList.add('visible');
-        }
-
-        // UI Updates
+        // --- UI UPDATES ---
         function updateUI() {
             updateGreeting();
-            updateTheme();
-            updateActiveUser();
-            updateActiveView();
+            updateActiveUserButton();
+            updateViewSwitcher();
             renderEntries();
-            elements.settingsBtn.innerHTML = settingsIcon;
+            updateTimerDisplay();
+            updateTimerButton(!!getUserTimer().startTime);
+        }
+
+        function setupUserSwitcher() {
+            elements.userSwitcher.innerHTML = USERS.map(user => `
+                <button class="user-btn relative px-3 py-1.5 text-sm font-semibold rounded-full transition-colors" data-user="${user}">
+                    ${user.charAt(0)}
+                </button>
+            `).join('');
+        }
+
+        function updateUserSwitcherIndicators() {
+            elements.userSwitcher.querySelectorAll('.user-btn').forEach(btn => {
+                const user = btn.dataset.user;
+                const isRunning = !!getUserTimer(user).startTime;
+                btn.classList.toggle('timer-running', isRunning);
+            });
+        }
+
+        function updateActiveUserButton() {
+             elements.userSwitcher.querySelectorAll('.user-btn').forEach(btn => {
+                const isCurrentUser = btn.dataset.user === state.currentUser;
+                btn.classList.toggle('bg-sky-500', isCurrentUser);
+                btn.classList.toggle('text-white', isCurrentUser);
+                btn.classList.toggle('text-neutral-400', !isCurrentUser);
+                btn.classList.toggle('hover:bg-neutral-700', !isCurrentUser);
+            });
         }
 
         function updateGreeting() {
             const hour = new Date().getHours();
-            const greetings = ['Dobré ráno', 'Dobrý den', 'Dobrý večer', 'Dobrou noc'];
-            const index = Math.floor(hour / 6);
-            elements.greeting.textContent = `${greetings[index]}, ${state.currentUser}`;
+            const greeting = hour < 12 ? 'Dobré ráno' : hour < 18 ? 'Dobrý den' : 'Dobrý večer';
+            elements.greeting.textContent = `${greeting}, ${state.currentUser}`;
         }
-
-        function updateTheme() {
-            document.body.classList.toggle('light-mode', state.globalSettings.theme === 'light');
-            elements.themeSwitcher.innerHTML = state.globalSettings.theme === 'light' ? moonIcon : sunIcon;
-        }
-
-        function toggleTheme() {
-            vibrate();
-            state.globalSettings.theme = state.globalSettings.theme === 'light' ? 'dark' : 'light';
-            saveState();
-            updateTheme();
-        }
-
-        function updateActiveUser() {
-            [...elements.userSwitcher.querySelectorAll('.user-btn')].forEach(btn => {
-                btn.classList.toggle('active', btn.dataset.user === state.currentUser);
-            });
-        }
-
-        function updateActiveView() {
-            [...elements.viewSwitcher.querySelectorAll('.view-btn')].forEach(btn => {
-                btn.classList.toggle('active', btn.dataset.view === state.currentView);
-            });
+        
+        function updateViewSwitcher() {
+            const views = { day: 'Den', week: 'Týden', month: 'Měsíc' };
+            elements.viewSwitcher.innerHTML = Object.entries(views).map(([key, label]) => `
+                <button class="view-btn px-3 py-1 rounded-full ${state.currentView === key ? 'bg-sky-500 text-white' : 'text-neutral-400'}" data-view="${key}">
+                    ${label}
+                </button>
+            `).join('');
         }
 
         function updateTimerButton(isRunning) {
-            elements.startStopBtn.textContent = isRunning ? 'Stop' : 'Start';
-            elements.startStopBtn.classList.toggle('start-btn', !isRunning);
-            elements.startStopBtn.classList.toggle('stop-btn', isRunning);
+            const btn = elements.startStopBtn;
+            btn.className = `relative w-40 h-14 rounded-full text-lg font-bold transition-all duration-300 overflow-hidden ${isRunning ? 'bg-red-600 hover:bg-red-700 text-white' : 'bg-green-500 hover:bg-green-600 text-white'}`;
+            btn.firstElementChild.textContent = isRunning ? 'Stop' : 'Start';
             elements.liveEarnings.style.display = isRunning ? 'block' : 'none';
-            elements.retroToggle.style.display = isRunning ? 'none' : 'block';
+            elements.retroToggle.style.display = isRunning ? 'none' : 'flex';
+            elements.appContainer.classList.toggle('timer-glow', isRunning);
+        }
+
+        function updateTimerDisplay() {
+            const timer = getUserTimer();
+            const elapsed = timer.startTime ? Date.now() - timer.startTime : 0;
+            
+            const totalSeconds = Math.floor(elapsed / 1000);
+            const hours = Math.floor(totalSeconds / 3600);
+            const minutes = Math.floor((totalSeconds % 3600) / 60);
+            const seconds = totalSeconds % 60;
+
+            elements.timerDisplay.textContent = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+            elements.timerSeconds.textContent = String(seconds).padStart(2, '0');
+
+            if (timer.startTime) {
+                const elapsedHours = elapsed / 3600000;
+                const earnings = elapsedHours * getUserSettings().rate;
+                elements.liveEarnings.textContent = `${formatCurrency(earnings)}`;
+                
+                const goal = getUserSettings().dailyGoal;
+                const progress = goal > 0 ? Math.min(elapsedHours / goal, 1) : 0;
+                elements.progressCircle.style.strokeDashoffset = 283 * (1 - progress);
+            } else {
+                elements.liveEarnings.textContent = '';
+                elements.progressCircle.style.strokeDashoffset = 283;
+            }
         }
 
         function renderEntries() {
             const entries = getFilteredEntries();
-            elements.entryList.innerHTML = entries.length ? entries.map(entry => `
-                <li class="entry-item">
-                    <div class="entry-details">
-                        <span class="entry-date">${formatDate(entry.start)}</span>
-                        <span class="entry-time">${formatTime(entry.start)} - ${formatTime(entry.end)}</span>
+            if (!entries.length) {
+                elements.entryList.innerHTML = `
+                    <li class="flex flex-col items-center justify-center text-center text-neutral-600 pt-10">
+                        ${noEntriesIcon}
+                        <p class="mt-4 font-medium">Žádné záznamy</p>
+                        <p class="text-sm">Pro tento pohled nebyly nalezeny žádné záznamy.</p>
+                    </li>`;
+                return;
+            }
+
+            elements.entryList.innerHTML = entries.map(entry => `
+                <li class="flex items-center bg-neutral-800 p-4 rounded-2xl">
+                    <div class="flex-1">
+                        <p class="font-semibold text-slate-200">${formatDate(entry.start)}</p>
+                        <p class="text-sm text-neutral-400">${formatTime(entry.start)} - ${formatTime(entry.end)}</p>
                     </div>
-                    <span class="entry-duration">${formatDuration(entry.duration, 'hm')}</span>
-                    <button class="delete-btn" data-id="${entry.id}" aria-label="Smazat">${deleteIcon}</button>
+                    <div class="text-right">
+                        <p class="font-bold text-lg text-sky-400">${formatDuration(entry.duration, 'hm')}</p>
+                        <p class="text-sm font-medium text-green-400">${formatCurrency((entry.duration / 3600000) * getUserSettings().rate)}</p>
+                    </div>
+                    <button class="delete-btn ml-4 text-neutral-500 hover:text-red-500 transition-colors" data-id="${entry.id}" aria-label="Smazat">${deleteIcon}</button>
                 </li>
-            `).join('') : '<p style="text-align: center; color: var(--text-secondary);">Žádné záznamy.</p>';
-            updateSummary(entries);
+            `).join('');
         }
 
-        function updateSummary(entries) {
-            const totalMs = entries.reduce((sum, e) => sum + e.duration, 0);
-            const days = new Set(entries.map(e => new Date(e.start).toDateString())).size || 1;
-            const hours = totalMs / 3600000;
-            const earnings = hours * getUserSettings().rate;
-            const average = earnings / days;
-            elements.summaryTime.textContent = formatDuration(totalMs, 'hm');
-            elements.summaryEarnings.textContent = `${earnings.toLocaleString('cs-CZ', {style: 'currency', currency: 'CZK', maximumFractionDigits: 0})}`;
-            elements.summaryAverage.textContent = `${average.toLocaleString('cs-CZ', {style: 'currency', currency: 'CZK', maximumFractionDigits: 0})}`;
+        // --- MODALS ---
+        async function showModal({ title, message, confirmText, cancelText = 'Zrušit', confirmClass = 'bg-sky-500', inputs = [] }) {
+            return new Promise(resolve => {
+                modalResolver = resolve;
+                let inputsHtml = inputs.map(input => `
+                    <div class="mb-4">
+                        <label for="${input.id}" class="block text-sm font-medium text-neutral-400 mb-1">${input.label}</label>
+                        <input type="${input.type || 'text'}" id="${input.id}" value="${input.value || ''}" placeholder="${input.placeholder || ''}" class="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-3 py-2 text-slate-200 focus:ring-2 focus:ring-sky-400 focus:outline-none">
+                    </div>
+                `).join('');
+
+                elements.modalContainer.innerHTML = `
+                    <div class="bg-neutral-800 w-full max-w-sm rounded-2xl shadow-lg p-6 transform transition-all scale-95 opacity-0" id="modal-content">
+                        <h2 class="text-xl font-bold text-slate-100">${title}</h2>
+                        ${message ? `<p class="text-neutral-400 mt-2">${message}</p>` : ''}
+                        <div class="mt-6">${inputsHtml}</div>
+                        <div class="flex justify-end gap-3 mt-6">
+                            <button id="modal-cancel" class="px-4 py-2 rounded-lg bg-neutral-700 hover:bg-neutral-600 text-slate-200 font-semibold transition-colors">${cancelText}</button>
+                            <button id="modal-confirm" class="px-4 py-2 rounded-lg text-white font-semibold transition-colors ${confirmClass}">${confirmText}</button>
+                        </div>
+                    </div>
+                `;
+                elements.modalContainer.classList.remove('hidden');
+                setTimeout(() => document.getElementById('modal-content').classList.remove('scale-95', 'opacity-0'), 10);
+                
+                document.getElementById('modal-confirm').onclick = () => {
+                    const values = inputs.reduce((acc, input) => {
+                        acc[input.id] = document.getElementById(input.id).value;
+                        return acc;
+                    }, {});
+                    closeModal(inputs.length > 0 ? values : true);
+                };
+                document.getElementById('modal-cancel').onclick = () => closeModal(false);
+            });
         }
 
-        // Utilities
+        function closeModal(value) {
+            const content = document.getElementById('modal-content');
+            if(content) content.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => {
+                elements.modalContainer.classList.add('hidden');
+                elements.modalContainer.innerHTML = '';
+                if (modalResolver) modalResolver(value);
+                modalResolver = null;
+            }, 200);
+        }
+
+        async function openSettings() {
+            vibrate();
+            const settings = getUserSettings();
+            const result = await showModal({
+                title: 'Nastavení',
+                confirmText: 'Uložit',
+                inputs: [
+                    { id: 'rate', label: 'Hodinová sazba (Kč)', value: settings.rate, type: 'number', placeholder: '250' },
+                    { id: 'dailyGoal', label: 'Denní cíl (hodiny)', value: settings.dailyGoal, type: 'number', placeholder: '8' }
+                ]
+            });
+            if (result) {
+                const rate = parseFloat(result.rate);
+                const goal = parseFloat(result.dailyGoal);
+                if (rate > 0 && goal >= 0) {
+                    settings.rate = rate;
+                    settings.dailyGoal = goal;
+                    saveState();
+                    updateUI();
+                }
+            }
+        }
+
+        async function openManualEntry() {
+            vibrate();
+            const result = await showModal({
+                title: 'Ruční zadání',
+                confirmText: 'Uložit',
+                inputs: [
+                    { id: 'manualDate', label: 'Datum', type: 'date', value: new Date().toISOString().split('T')[0] },
+                    { id: 'manualDuration', label: 'Doba (např. 2:30, 90m, 1.5h)', placeholder: '2:30' }
+                ]
+            });
+            if (result && result.manualDate && result.manualDuration) {
+                const durationMs = parseDuration(result.manualDuration);
+                if (durationMs <= 0) return;
+                const end = new Date(`${result.manualDate}T23:59:59`).getTime();
+                const start = end - durationMs;
+                addEntry(start, end);
+                saveState();
+                updateUI();
+            }
+        }
+
+        // --- UTILITIES ---
         function getFilteredEntries() {
             const now = new Date();
-            const startDate = new Date();
-            if (state.currentView === 'day') startDate.setHours(0,0,0,0);
-            else if (state.currentView === 'week') startDate.setDate(startDate.getDate() - startDate.getDay() + 1);
-            else if (state.currentView === 'month') startDate.setDate(1);
-            return getUserData().entries.filter(e => new Date(e.start) >= startDate).sort((a,b) => b.start - a.start);
+            const startOf = (date) => new Date(date.getFullYear(), date.getMonth(), date.getDate());
+            let startDate;
+            
+            if (state.currentView === 'day') {
+                startDate = startOf(now);
+            } else if (state.currentView === 'week') {
+                const dayOfWeek = now.getDay();
+                const diff = now.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1); // Adjust for Sunday
+                startDate = startOf(new Date(now.setDate(diff)));
+            } else if (state.currentView === 'month') {
+                startDate = startOf(new Date(now.getFullYear(), now.getMonth(), 1));
+            }
+            return getUserData().entries.filter(e => e.start >= startDate.getTime()).sort((a,b) => b.start - a.start);
         }
 
         function parseDuration(str) {
+            if (!str) return 0;
             let minutes = 0;
-            if (/:/.test(str)) {
+            if (str.includes(':')) {
                 const [h, m] = str.split(':').map(Number);
-                minutes = h * 60 + (m || 0);
-            } else if (/h$/.test(str)) minutes = parseFloat(str) * 60;
-            else if (/m$/.test(str)) minutes = parseFloat(str);
-            else minutes = parseFloat(str) * 60;
+                minutes = (h || 0) * 60 + (m || 0);
+            } else if (str.toLowerCase().includes('h')) {
+                minutes = parseFloat(str) * 60;
+            } else if (str.toLowerCase().includes('m')) {
+                minutes = parseFloat(str);
+            } else if (!isNaN(parseFloat(str))) {
+                minutes = parseFloat(str); // Assume minutes if no unit
+            }
             return minutes * 60000;
         }
 
@@ -679,37 +597,36 @@
             const s = Math.floor(ms / 1000);
             const h = Math.floor(s / 3600);
             const m = Math.floor((s % 3600) / 60);
-            const sec = s % 60;
-            if (format === 'hm') return `${h}h ${m.toString().padStart(2,'0')}m`;
-            return `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${sec.toString().padStart(2,'0')}`;
+            if (format === 'hm') return `${h}h ${String(m).padStart(2,'0')}m`;
+            return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s % 60).padStart(2,'0')}`;
         }
 
-        function formatDate(ts) { return new Date(ts).toLocaleDateString('cs-CZ', {day: 'numeric', month: 'long'}); }
-        function formatTime(ts) { return new Date(ts).toLocaleTimeString('cs-CZ', {hour: '2-digit', minute: '2-digit'}); }
+        function formatDate(ts) { return new Date(ts).toLocaleDateString('cs-CZ', { weekday: 'long', day: 'numeric', month: 'long' }); }
+        function formatTime(ts) { return new Date(ts).toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' }); }
+        function formatCurrency(amount) { return amount.toLocaleString('cs-CZ', { style: 'currency', currency: 'CZK', maximumFractionDigits: 0 }); }
 
         function exportToCSV() {
             vibrate();
             const entries = getUserData().entries;
-            if (!entries.length) return alert('Není co exportovat.');
+            if (!entries.length) return;
             let csv = 'Datum;Začátek;Konec;Doba (min);Sazba;Výdělek\r\n';
             entries.forEach(e => {
                 const hours = e.duration / 3600000;
                 const earn = hours * getUserSettings().rate;
-                csv += `${formatDate(e.start)};${formatTime(e.start)};${formatTime(e.end)};${Math.round(e.duration / 60000)};${getUserSettings().rate};${earn.toFixed(2).replace('.', ',')}\r\n`;
+                csv += `${new Date(e.start).toLocaleDateString('cs-CZ')};${formatTime(e.start)};${formatTime(e.end)};${Math.round(e.duration / 60000)};${getUserSettings().rate};${earn.toFixed(2).replace('.', ',')}\r\n`;
             });
             const link = document.createElement('a');
-            link.href = `text/csv;charset=utf-8,${encodeURIComponent(csv)}`;
+            link.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
             link.download = `export_${state.currentUser}_${new Date().toISOString().split('T')[0]}.csv`;
             link.click();
         }
 
         function vibrate(ms = 10) { navigator.vibrate?.(ms); }
-
         function notify(message) {
-            if (Notification.permission === 'granted') new Notification(message);
-            else if (Notification.permission !== 'denied') Notification.requestPermission().then(perm => { if (perm === 'granted') new Notification(message); });
+            if (Notification.permission === 'granted') new Notification('WorkTime Tracker', { body: message, icon: document.querySelector('link[rel="icon"]').href });
         }
 
+        // --- START APP ---
         init();
     </script>
 </body>
