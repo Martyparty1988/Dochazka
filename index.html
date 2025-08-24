@@ -74,8 +74,7 @@
         .header-icon-btn:hover { color: var(--primary-dark); text-shadow: var(--glow-primary); }
         .header-icon-btn svg { width: 24px; height: 24px; }
         .main-content { flex-grow: 1; display: flex; flex-direction: column; overflow-y: auto; padding-right: 8px; }
-        .timer-card { background-color: var(--card-dark); border: 1px solid rgba(88, 166, 255, 0.3); border-radius: 24px; padding: 32px; text-align: center; margin-bottom: 24px; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); box-shadow: 0 0 30px rgba(0,0,0,0.2); flex-shrink: 0; }
-        .timer-display { font-family: 'Roboto Mono', monospace; font-size: 4.5rem; font-weight: 700; color: var(--text-dark); margin: 0; font-variant-numeric: tabular-nums; text-shadow: var(--glow-primary); transition: color 0.3s, text-shadow 0.3s; }
+        .timer-card { background-color: var(--card-dark); border: 1px solid rgba(88, 166, 255, 0.3); border-radius: 24px; padding: 32px; text-align: center; margin-bottom: 24px; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); box-shadow: 0 0 30px rgba(0,0,0,0.2); flex-shrink: 0; }... .timer-display { font-family: 'Roboto Mono', monospace; font-size: 4.5rem; font-weight: 700; color: var(--text-dark); margin: 0; font-variant-numeric: tabular-nums; text-shadow: var(--glow-primary); transition: color 0.3s, text-shadow 0.3s; }
         .timer-display.running { color: var(--accent-dark); text-shadow: var(--glow-accent); }
         .timer-display.paused { color: var(--warning-dark); text-shadow: var(--glow-warning); }
         .live-earnings { font-family: 'Roboto Mono', monospace; font-size: 1.5rem; color: var(--accent-dark); font-weight: 700; margin: 8px 0 24px 0; height: 2rem; text-shadow: var(--glow-accent); transition: opacity 0.3s; }
@@ -133,10 +132,35 @@
         .modal-btn { padding: 10px 20px; border-radius: 99px; border: none; font-weight: 700; cursor: pointer; }
         .modal-btn.primary { background-color: var(--primary-dark); color: #fff; }
         .modal-btn.secondary { background-color: rgba(255,255,255,0.1); color: var(--text-dark); }
-        .modal-input-group { margin-bottom: 16px; }
-        .modal-input-group label { display: block; margin-bottom: 4px; font-size: 0.9rem; color: var(--text-secondary-dark); }
+        .modal-input-group { margin-bottom: 16px; }... .modal-input-group label { display: block; margin-bottom: 4px; font-size: 0.9rem; color: var(--text-secondary-dark); }
         .modal-input-group input { width: 100%; padding: 10px; border-radius: 12px; border: 1px solid rgba(88, 166, 255, 0.3); background-color: var(--bg-dark); color: var(--text-dark); font-family: 'Inter', sans-serif; }
         .modal-input-row { display: flex; gap: 12px; }
+
+        /* --- Fáze 1 vylepšení pro iPhone: Nové styly pro iOS komponenty, FAB, pull-to-refresh --- */
+        /* iOS-style segmented control (nahrazení view-switcher) */
+        .ios-segmented-control { display: flex; background-color: rgba(0,0,0,0.2); padding: 4px; border-radius: 10px; position: relative; }
+        .ios-segment { background: none; border: none; padding: 8px 16px; font-weight: 600; color: var(--text-secondary-dark); cursor: pointer; transition: color 0.3s; z-index: 2; font-size: 0.9rem; }
+        .ios-segment.active { color: #fff; }
+        .ios-segment-indicator { position: absolute; top: 4px; height: calc(100% - 8px); background-color: var(--primary-dark); border-radius: 8px; transition: all 0.3s ease; box-shadow: var(--glow-primary); z-index: 1; }
+
+        /* iOS-style buttons */
+        .ios-button { min-height: 44px; border-radius: 10px; font-size: 1rem; font-weight: 600; touch-action: manipulation; -webkit-touch-callout: none; }
+
+        /* Floating Action Button (FAB) */
+        .fab { position: fixed; bottom: calc(20px + var(--safe-area-bottom)); right: 20px; width: 56px; height: 56px; border-radius: 50%; background-image: linear-gradient(45deg, var(--accent-dark), var(--primary-dark)); box-shadow: 0 4px 8px rgba(0,0,0,0.3), var(--glow-accent); color: #fff; font-size: 24px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: transform 0.3s; z-index: 100; }
+        .fab:active { transform: scale(0.95); }
+
+        /* Pull-to-refresh styles */
+        .pull-indicator { position: absolute; top: -50px; left: 0; right: 0; height: 50px; display: flex; align-items: center; justify-content: center; transition: transform 0.3s; }
+        .refresh-spinner { width: 24px; height: 24px; border: 3px solid var(--primary-dark); border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite; display: none; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .main-content.pulling .pull-indicator { transform: translateY(50px); }
+        .main-content.refreshing .refresh-spinner { display: block; }
+
+        /* Optimalizace pro iPhone: prefers-reduced-motion */
+        @media (prefers-reduced-motion: reduce) {
+            * { transition: none !important; animation: none !important; }
+        }
     </style>
 </head>
 <body>
@@ -155,7 +179,11 @@
                 <button class="header-icon-btn" id="theme-switcher" aria-label="Přepnout motiv"></button>
             </div>
         </header>
-        <main class="main-content">
+        <main class="main-content" id="main-content">
+            <!-- Pull-to-refresh indicator -->
+            <div class="pull-indicator" id="pull-indicator">
+                <div class="refresh-spinner"></div>
+            </div>
             <div class="timer-card">
                 <h2 class="timer-display" id="timer-display">00:00:00</h2>
                 <p class="live-earnings" id="live-earnings"></p>
@@ -164,10 +192,12 @@
             <div class="stats-container">
                 <div class="stats-header">
                     <h2 class="stats-title">Přehled</h2>
-                    <div class="view-switcher">
-                        <button class="view-btn active" data-view="day">Den</button>
-                        <button class="view-btn" data-view="week">Týden</button>
-                        <button class="view-btn" data-view="month">Měsíc</button>
+                    <!-- Nahrazeno iOS segmented control -->
+                    <div class="ios-segmented-control" id="ios-view-switcher">
+                        <div class="ios-segment-indicator" id="ios-segment-indicator"></div>
+                        <button class="ios-segment active" data-view="day">Den</button>
+                        <button class="ios-segment" data-view="week">Týden</button>
+                        <button class="ios-segment" data-view="month">Měsíc</button>
                     </div>
                 </div>
                 <div class="summary-card">
@@ -180,7 +210,11 @@
         <footer class="app-footer">
             <button class="footer-btn" id="manual-entry-btn">Přidat ručně</button>
             <button class="footer-btn" id="export-btn">Exportovat</button>
+            <!-- Nové tlačítko pro zálohu -->
+            <button class="footer-btn" id="backup-btn">Záloha</button>
         </footer>
+        <!-- Floating Action Button -->
+        <button class="fab" id="fab-btn">+</button>
     </div>
     <!-- Modals -->
     <div id="settings-modal" class="modal-overlay">
@@ -273,12 +307,24 @@
             </div>
         </div>
     </div>
+    <!-- Nový modal pro import zálohy (pro BackupManager) -->
+    <div id="backup-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h2>Záloha a obnova</h2>
+            <button id="backup-export" class="modal-btn primary">Exportovat zálohu</button>
+            <input type="file" id="backup-import" accept=".json" style="margin-top: 16px;">
+            <div class="modal-actions">
+                <button id="backup-close" class="modal-btn secondary">Zavřít</button>
+            </div>
+        </div>
+    </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             // --- CONSTANTS ---
             const USERS = ['Marty', 'Čenda', 'Kuba'];
             const DB_KEY = 'workTimeTrackerData_v4.3';
+            const AUTO_BACKUP_KEY = 'worktime_auto_backup'; // Pro automatické zálohy
 
             // --- DOM ELEMENTS ---
             const greetingEl = document.getElementById('greeting');
@@ -289,12 +335,22 @@
             const timerDisplay = document.getElementById('timer-display');
             const liveEarningsEl = document.getElementById('live-earnings');
             const timerControls = document.getElementById('timer-controls');
-            const viewSwitcher = document.querySelector('.view-switcher');
+            // viewSwitcher nahrazeno iosViewSwitcher
+            const iosViewSwitcher = document.getElementById('ios-view-switcher');
+            const iosSegmentIndicator = document.getElementById('ios-segment-indicator');
             const summaryTime = document.getElementById('summary-time');
             const summaryEarnings = document.getElementById('summary-earnings');
             const entryList = document.getElementById('entry-list');
             const exportBtn = document.getElementById('export-btn');
             const manualEntryBtn = document.getElementById('manual-entry-btn');
+            // Nové prvky pro Fáze 1
+            const fabBtn = document.getElementById('fab-btn');
+            const mainContent = document.getElementById('main-content');
+            const backupBtn = document.getElementById('backup-btn');
+            const backupModal = document.getElementById('backup-modal');
+            const backupExport = document.getElementById('backup-export');
+            const backupImport = document.getElementById('backup-import');
+            const backupClose = document.getElementById('backup-close');
             // Modals
             const settingsModal = document.getElementById('settings-modal');
             const manualEntryModal = document.getElementById('manual-entry-modal');
@@ -312,9 +368,11 @@
             // --- APP STATE ---
             let state = {};
             let deleteResolver = null;
-            let mobileFeatures;
+            let enhancedMobileFeatures;
             let exportManager;
-
+            let notificationManager;
+            let pullToRefreshManager;
+            let backupManager;
             const EntrySchema = {
                 validate(entry) {
                     if (!entry.id || !entry.user || !entry.startTime || !entry.endTime) {
@@ -374,7 +432,8 @@
                 }
             }
 
-            class MobileFeatures {
+            /* --- Fáze 1 vylepšení pro iPhone: Rozšířená třída EnhancedMobileFeatures s haptic feedbackem --- */
+            class EnhancedMobileFeatures {
                 constructor() {
                     this.wakeLock = null;
                 }
@@ -397,12 +456,141 @@
                         navigator.vibrate(pattern);
                     }
                 }
+                // Nové metody pro haptic feedback (light, medium, heavy)
+                haptic(type = 'light') {
+                    if ('vibrate' in navigator) {
+                        const patterns = {
+                            light: 10,
+                            medium: [10, 20, 10],
+                            heavy: [50, 100, 50]
+                        };
+                        this.vibrate(patterns[type] || 10);
+                    }
+                }
+            }
+
+            /* --- Fáze 1 vylepšení pro iPhone: Třída NotificationManager pro push notifikace --- */
+            class NotificationManager {
+                constructor() {
+                    this.permission = null;
+                    this.requestPermission();
+                    this.breakReminderInterval = null;
+                }
+                async requestPermission() {
+                    if ('Notification' in window) {
+                        this.permission = await Notification.requestPermission();
+                    }
+                }
+                showNotification(title, options) {
+                    if (this.permission === 'granted') {
+                        new Notification(title, options);
+                    }
+                }
+                startBreakReminder() {
+                    if (this.breakReminderInterval) clearInterval(this.breakReminderInterval);
+                    this.breakReminderInterval = setInterval(() => {
+                        this.showNotification('Připomínka přestávky', { body: 'Už jste pracovali 2 hodiny. Udělejte si přestávku!' });
+                    }, 2 * 60 * 60 * 1000); // Každé 2 hodiny
+                }
+                stopBreakReminder() {
+                    if (this.breakReminderInterval) clearInterval(this.breakReminderInterval);
+                }
+            }
+
+            /* --- Fáze 1 vylepšení pro iPhone: Třída PullToRefreshManager --- */
+            class PullToRefreshManager {
+                constructor(element, onRefresh) {
+                    this.element = element;
+                    this.onRefresh = onRefresh;
+                    this.touchStartY = 0;
+                    this.pullThreshold = 80;
+                    this.isPulling = false;
+                    this.setupListeners();
+                }
+                setupListeners() {
+                    this.element.addEventListener('touchstart', (e) => {
+                        if (this.element.scrollTop === 0) {
+                            this.touchStartY = e.touches[0].clientY;
+                            this.isPulling = true;
+                        }
+                    });
+                    this.element.addEventListener('touchmove', (e) => {
+                        if (!this.isPulling) return;
+                        const touchY = e.touches[0].clientY;
+                        const pullDistance = touchY - this.touchStartY;
+                        if (pullDistance > 0) {
+                            e.preventDefault();
+                            this.element.classList.add('pulling');
+                            if (pullDistance > this.pullThreshold) {
+                                this.element.classList.add('ready-to-refresh');
+                            }
+                        }
+                    });
+                    this.element.addEventListener('touchend', () => {
+                        if (this.isPulling) {
+                            if (this.element.classList.contains('ready-to-refresh')) {
+                                this.element.classList.remove('pulling', 'ready-to-refresh');
+                                this.element.classList.add('refreshing');
+                                setTimeout(() => {
+                                    this.onRefresh();
+                                    this.element.classList.remove('refreshing');
+                                }, 1000); // 1 sekunda simulace
+                            } else {
+                                this.element.classList.remove('pulling');
+                            }
+                            this.isPulling = false;
+                        }
+                    });
+                }
+            }
+
+            /* --- Fáze 1 vylepšení pro iPhone: Třída BackupManager pro zálohy --- */
+            class BackupManager {
+                constructor(getState, setState) {
+                    this.getState = getState;
+                    this.setState = setState;
+                }
+                exportToJSON() {
+                    const data = JSON.stringify(this.getState());
+                    const blob = new Blob([data], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = `worktime_backup_${new Date().toISOString().split('T')[0]}.json`;
+                    link.click();
+                    URL.revokeObjectURL(url);
+                }
+                importFromJSON(file) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        try {
+                            const importedState = JSON.parse(e.target.result);
+                            this.setState(importedState);
+                            alert('Data úspěšně obnovena.');
+                            updateUI();
+                        } catch (err) {
+                            alert('Chyba při importu: Neplatný soubor.');
+                        }
+                    };
+                    reader.readAsText(file);
+                }
+                autoBackup() {
+                    const today = new Date().toDateString();
+                    const lastBackup = localStorage.getItem(AUTO_BACKUP_KEY + '_date');
+                    if (lastBackup !== today) {
+                        localStorage.setItem(AUTO_BACKUP_KEY, JSON.stringify(this.getState()));
+                        localStorage.setItem(AUTO_BACKUP_KEY + '_date', today);
+                    }
+                }
             }
 
             // --- INITIALIZATION ---
             function init() {
-                mobileFeatures = new MobileFeatures();
+                enhancedMobileFeatures = new EnhancedMobileFeatures(); // Rozšířená třída
                 exportManager = new ExportManager(() => state);
+                notificationManager = new NotificationManager(); // Nový manažer
+                pullToRefreshManager = new PullToRefreshManager(mainContent, updateUI); // Nový manažer
+                backupManager = new BackupManager(() => state, (newState) => { state = newState; saveState(); }); // Nový manažer
                 loadState();
                 setupPWA();
                 setupEventListeners();
@@ -411,6 +599,10 @@
                 }
                 updateUI();
                 updateTimerUIForCurrentUser();
+                updateIosViewSwitcherUI(); // Nová funkce pro segmented control
+                backupManager.autoBackup(); // Automatická denní záloha
+                // Přidání iOS-style tříd k tlačítkům
+                document.querySelectorAll('.timer-btn, .footer-btn, .modal-btn, .user-btn, .ios-segment').forEach(btn => btn.classList.add('ios-button'));
             }
 
             function loadState() {
@@ -466,7 +658,8 @@
                 userSwitcher.addEventListener('click', handleUserSwitch);
                 themeSwitcher.addEventListener('click', toggleTheme);
                 timerControls.addEventListener('click', handleTimerControls);
-                viewSwitcher.addEventListener('click', handleViewSwitch);
+                // viewSwitcher nahrazeno iosViewSwitcher
+                iosViewSwitcher.addEventListener('click', handleViewSwitch);
                 exportBtn.addEventListener('click', () => exportModal.classList.add('visible'));
                 document.getElementById('export-cancel').addEventListener('click', () => exportModal.classList.remove('visible'));
                 document.getElementById('export-csv').addEventListener('click', () => {
@@ -493,6 +686,19 @@
                 document.getElementById('delete-cancel').addEventListener('click', () => { if (deleteResolver) deleteResolver(false); confirmDeleteModal.classList.remove('visible'); });
                 entryList.addEventListener('click', handleEntryActions);
                 setupSwipeListeners();
+
+                // Nové event listeners pro Fáze 1
+                fabBtn.addEventListener('click', handleFabClick);
+                backupBtn.addEventListener('click', () => backupModal.classList.add('visible'));
+                backupExport.addEventListener('click', () => { backupManager.exportToJSON(); enhancedMobileFeatures.haptic('medium'); });
+                backupImport.addEventListener('change', (e) => { if (e.target.files[0]) backupManager.importFromJSON(e.target.files[0]); });
+                backupClose.addEventListener('click', () => backupModal.classList.remove('visible'));
+
+                // Přidání haptic feedback na všechny kliky a gesty (např. na buttony)
+                document.querySelectorAll('button, .ios-button').forEach(el => {
+                    el.addEventListener('click', () => enhancedMobileFeatures.haptic('light'));
+                });
+                // Haptic na swipe gesty (přidáno do setupSwipeListeners)
             }
 
             function setupSwipeListeners() {
@@ -531,6 +737,7 @@
                     if (diffX < -swipeThreshold) {
                         swipedItem.style.transform = `translateX(-${maxSwipe}px)`;
                         swipedItem.classList.add('swiped');
+                        enhancedMobileFeatures.haptic('medium'); // Haptic na swipe
                     } else {
                         swipedItem.style.transform = 'translateX(0)';
                         swipedItem.classList.remove('swiped');
@@ -542,7 +749,7 @@
             // --- HANDLERS ---
             function handleUserSwitch(e) {
                 if (!e.target.matches('.user-btn')) return;
-                mobileFeatures.vibrate();
+                enhancedMobileFeatures.haptic('medium');
                 const previousUser = state.currentUser;
                 const newUser = e.target.dataset.user;
                 if (previousUser === newUser) return;
@@ -558,7 +765,7 @@
             }
 
             function toggleTheme() {
-                mobileFeatures.vibrate();
+                enhancedMobileFeatures.haptic('light');
                 state.settings.theme = state.settings.theme === 'dark' ? 'light' : 'dark';
                 document.body.classList.toggle('light-mode', state.settings.theme === 'light');
                 themeSwitcher.innerHTML = state.settings.theme === 'dark' ? sunIcon : moonIcon;
@@ -566,18 +773,19 @@
             }
 
             function handleViewSwitch(e) {
-                if (!e.target.matches('.view-btn')) return;
-                mobileFeatures.vibrate();
-                document.querySelectorAll('.view-btn').forEach(btn => btn.classList.remove('active'));
+                if (!e.target.matches('.ios-segment')) return;
+                enhancedMobileFeatures.haptic('light');
+                document.querySelectorAll('.ios-segment').forEach(btn => btn.classList.remove('active'));
                 e.target.classList.add('active');
                 state.currentView = e.target.dataset.view;
+                updateIosViewSwitcherUI();
                 updateUI();
             }
 
             function handleTimerControls(e) {
                 const action = e.target.dataset.action;
                 if (!action) return;
-                mobileFeatures.vibrate(100);
+                enhancedMobileFeatures.haptic('medium');
                 switch (action) {
                     case 'start': startTimer(); break;
                     case 'pause': pauseTimer(); break;
@@ -586,9 +794,21 @@
                 }
             }
 
+            /* --- Nový handler pro FAB --- */
+            function handleFabClick() {
+                enhancedMobileFeatures.haptic('heavy');
+                const timer = state.timers[state.currentUser];
+                if (timer.startTime && !timer.isPaused) {
+                    stopTimer();
+                } else {
+                    startTimer();
+                }
+                updateFabUI();
+            }
+
             function handleManualSubmit(e) {
                 e.preventDefault();
-                mobileFeatures.vibrate();
+                enhancedMobileFeatures.haptic('medium');
                 const dateInput = document.getElementById('manual-date');
                 const durationInput = document.getElementById('manual-duration');
                 const durationMs = parseDurationInput(durationInput.value);
@@ -623,7 +843,7 @@
 
             function handleEditSubmit(e) {
                 e.preventDefault();
-                mobileFeatures.vibrate();
+                enhancedMobileFeatures.haptic('medium');
                 const id = document.getElementById('edit-entry-id').value;
                 const date = document.getElementById('edit-date').value;
                 const startTime = document.getElementById('edit-start-time').value;
@@ -657,7 +877,7 @@
             function handleEntryActions(e) {
                 const button = e.target.closest('.entry-action-btn');
                 if (!button) return;
-                mobileFeatures.vibrate();
+                enhancedMobileFeatures.haptic('medium');
                 const entryId = button.dataset.id;
                 const action = button.dataset.action;
                 const item = button.closest('.entry-item-wrapper').querySelector('.entry-item');
@@ -680,7 +900,7 @@
 
             // --- MODAL HANDLERS ---
             function openSettingsModal() {
-                mobileFeatures.vibrate();
+                enhancedMobileFeatures.haptic('light');
                 document.getElementById('rate-marty').value = state.settings.userRates['Marty'] || 250;
                 document.getElementById('rate-cenda').value = state.settings.userRates['Čenda'] || 250;
                 document.getElementById('rate-kuba').value = state.settings.userRates['Kuba'] || 250;
@@ -688,7 +908,7 @@
             }
 
             function saveSettings() {
-                mobileFeatures.vibrate();
+                enhancedMobileFeatures.haptic('medium');
                 state.settings.userRates['Marty'] = parseInt(document.getElementById('rate-marty').value) || 250;
                 state.settings.userRates['Čenda'] = parseInt(document.getElementById('rate-cenda').value) || 250;
                 state.settings.userRates['Kuba'] = parseInt(document.getElementById('rate-kuba').value) || 250;
@@ -698,14 +918,14 @@
             }
 
             function openManualEntryModal() {
-                mobileFeatures.vibrate();
+                enhancedMobileFeatures.haptic('light');
                 document.getElementById('manual-date').value = new Date().toISOString().split('T')[0];
                 document.getElementById('manual-duration').value = '';
                 manualEntryModal.classList.add('visible');
             }
 
             function openEditModal(entryId) {
-                mobileFeatures.vibrate();
+                enhancedMobileFeatures.haptic('light');
                 const entry = state.entries.find(e => e.id === entryId);
                 if (!entry) return;
                 const date = new Date(entry.startTime).toISOString().split('T')[0];
@@ -742,9 +962,11 @@
                 timer.totalPausedDuration = 0;
                 timer.pauseStartTime = null;
                 timer.intervalId = setInterval(updateTimerDisplay, 1000);
-                mobileFeatures.toggleWakeLock(true);
+                enhancedMobileFeatures.toggleWakeLock(true);
+                notificationManager.startBreakReminder(); // Spustit připomínky
                 saveState();
                 updateTimerUIForCurrentUser();
+                updateFabUI();
             }
 
             function pauseTimer() {
@@ -754,7 +976,8 @@
                 timer.intervalId = null;
                 timer.isPaused = true;
                 timer.pauseStartTime = Date.now();
-                mobileFeatures.toggleWakeLock(false);
+                enhancedMobileFeatures.toggleWakeLock(false);
+                notificationManager.stopBreakReminder();
                 updateTimerUIForCurrentUser();
                 saveState();
             }
@@ -766,7 +989,8 @@
                 timer.isPaused = false;
                 timer.pauseStartTime = null;
                 timer.intervalId = setInterval(updateTimerDisplay, 1000);
-                mobileFeatures.toggleWakeLock(true);
+                enhancedMobileFeatures.toggleWakeLock(true);
+                notificationManager.startBreakReminder();
                 updateTimerUIForCurrentUser();
                 saveState();
             }
@@ -782,10 +1006,16 @@
                 }
                 const duration = endTime - timer.startTime - timer.totalPausedDuration;
                 addEntry(timer.startTime, endTime, duration);
+                // Notifikace při stop
+                const rate = getCurrentUserRate();
+                const earnings = (duration / 3600000) * rate;
+                notificationManager.showNotification('Práce ukončena', { body: `Odpracováno: ${formatDuration(duration)}, Výdělek: ${earnings.toFixed(2)} Kč` });
                 resetTimer(timer);
-                mobileFeatures.toggleWakeLock(false);
+                enhancedMobileFeatures.toggleWakeLock(false);
+                notificationManager.stopBreakReminder();
                 updateTimerUIForCurrentUser();
                 updateUI();
+                updateFabUI();
             }
 
             function resetTimer(timer) {
@@ -840,6 +1070,7 @@
                 updateEntriesList();
                 updateSummary();
                 updateTimerDisplay();
+                updateFabUI(); // Nové
             }
 
             function updateGreeting() {
@@ -862,6 +1093,17 @@
                 });
             }
 
+            /* --- Nová funkce pro aktualizaci iOS segmented control --- */
+            function updateIosViewSwitcherUI() {
+                const activeBtn = iosViewSwitcher.querySelector(`[data-view="${state.currentView}"]`);
+                if (activeBtn) {
+                    const index = Array.from(iosViewSwitcher.querySelectorAll('.ios-segment')).indexOf(activeBtn);
+                    const btnWidth = activeBtn.offsetWidth;
+                    iosSegmentIndicator.style.width = `${btnWidth}px`;
+                    iosSegmentIndicator.style.transform = `translateX(${index * btnWidth}px)`;
+                }
+            }
+
             function updateTimerUIForCurrentUser() {
                 const timer = state.timers[state.currentUser];
                 timerControls.innerHTML = '';
@@ -870,27 +1112,34 @@
                         timerDisplay.classList.add('paused');
                         timerDisplay.classList.remove('running');
                         timerControls.innerHTML = `
-                            <button class="timer-btn pause-btn" data-action="resume">Pokračovat</button>
-                            <button class="timer-btn stop-btn" data-action="stop">Ukončit</button>
+                            <button class="timer-btn pause-btn ios-button" data-action="resume">Pokračovat</button>
+                            <button class="timer-btn stop-btn ios-button" data-action="stop">Ukončit</button>
                         `;
                     } else {
                         timerDisplay.classList.add('running');
                         timerDisplay.classList.remove('paused');
                         timerControls.innerHTML = `
-                            <button class="timer-btn pause-btn" data-action="pause">Pozastavit</button>
-                            <button class="timer-btn stop-btn" data-action="stop">Ukončit</button>
+                            <button class="timer-btn pause-btn ios-button" data-action="pause">Pozastavit</button>
+                            <button class="timer-btn stop-btn ios-button" data-action="stop">Ukončit</button>
                         `;
                     }
                     liveEarningsEl.style.opacity = 1;
                 } else {
                     timerDisplay.classList.remove('running', 'paused');
                     timerControls.innerHTML = `
-                        <button class="timer-btn start-btn" data-action="start">Spustit</button>
+                        <button class="timer-btn start-btn ios-button" data-action="start">Spustit</button>
                         <input type="time" class="retro-start-input" placeholder="Retro start">
                     `;
                     liveEarningsEl.style.opacity = 0;
                 }
                 updateTimerDisplay();
+            }
+
+            /* --- Nová funkce pro aktualizaci FAB --- */
+            function updateFabUI() {
+                const timer = state.timers[state.currentUser];
+                fabBtn.textContent = timer.startTime && !timer.isPaused ? '■' : '+'; // Symbol pro stop/start
+                fabBtn.style.backgroundImage = timer.startTime && !timer.isPaused ? 'linear-gradient(45deg, var(--danger-dark), var(--warning-dark))' : 'linear-gradient(45deg, var(--accent-dark), var(--primary-dark))';
             }
 
             function updateSummary() {
@@ -921,7 +1170,6 @@
             }
 
             function updateEntriesList() {
-                const { totalTime } = calculateSummary(); // Použijeme pro filtrování, ale ne přímo
                 const filteredEntries = state.entries
                     .filter(e => e.user === state.currentUser)
                     .sort((a, b) => b.startTime - a.startTime);
