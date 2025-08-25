@@ -1,1209 +1,2485 @@
 <!DOCTYPE html>
 <html lang="cs">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>WorkTime Tracker v4.3</title>
-    <!-- PWA Meta Tags -->
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="WorkTime">
-    <meta name="theme-color" content="#010409">
-    <!-- App Icon -->
-    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M50 5 L95 50 L50 95 L5 50 Z' fill='%230D1117' stroke='%2339D353' stroke-width='8'/%3E%3Ctext x='50' y='57' font-size='30' fill='%2339D353' text-anchor='middle' font-family='Roboto Mono,monospace' font-weight='700'%3EWT%3C/text%3E%3C/svg%3E">
-    <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22.5' fill='%230D1117'/%3E%3Cpath d='M25 50 L50 25 L75 50 L50 75 Z' fill='none' stroke='%2339D353' stroke-width='5'/%3E%3C/svg%3E">
-    <link rel="manifest" id="manifest">
-    <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&family=Inter:wght@400;700&display=swap" rel="stylesheet">
-    <!-- Oprava pro GitHub Pages: Přidali jsme <base> tag, aby relativní cesty fungovaly správně na subdirektoriích (jako /Dochazka/). -->
-    <!-- Pokud to nefunguje, přidej prázdný soubor .nojekyll do kořene repozitáře (vytvoř ho přes GitHub: New file > .nojekyll > Commit). To deaktivuje Jekyll, který může ignorovat styly a JS. -->
-    <base href="/Dochazka/">
-    <style>
-        :root {
-            --bg-light: #F0F2F5; --bg-dark: #0D1117; --bg-dark-end: #010409;
-            --card-light: rgba(255, 255, 255, 0.8); --card-dark: rgba(22, 27, 34, 0.75);
-            --text-light: #1c1e21; --text-dark: #E6EDF3;
-            --text-secondary-light: #65676b; --text-secondary-dark: #8B949E;
-            --primary-light: #1877F2; --primary-dark: #58A6FF;
-            --accent-light: #31A24C; --accent-dark: #39D353;
-            --danger-light: #FA383E; --danger-dark: #F85149;
-            --warning-light: #F7B928; --warning-dark: #F0B72F;
-            --glow-primary: 0 0 8px var(--primary-dark), 0 0 16px var(--primary-dark);
-            --glow-accent: 0 0 8px var(--accent-dark), 0 0 16px var(--accent-dark);
-            --glow-danger: 0 0 8px var(--danger-dark), 0 0 16px var(--danger-dark);
-            --glow-warning: 0 0 8px var(--warning-dark), 0 0 16px var(--warning-dark);
-            --safe-area-top: env(safe-area-inset-top); --safe-area-bottom: env(safe-area-inset-bottom);
-        }
-        html { box-sizing: border-box; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
-        *, *:before, *:after { box-sizing: inherit; }
-        body {
-            margin: 0; background-color: var(--bg-dark);
-            background-image: linear-gradient(180deg, var(--bg-dark) 0%, var(--bg-dark-end) 100%);
-            color: var(--text-dark); transition: background-color 0.3s ease, color 0.3s ease;
-            padding: 0 20px; overscroll-behavior: none; overflow: hidden; height: 100vh;
-        }
-        body.light-mode {
-            --bg-dark: var(--bg-light); --bg-dark-end: var(--bg-light); --card-dark: var(--card-light);
-            --text-dark: var(--text-light); --text-secondary-dark: var(--text-secondary-light);
-            --primary-dark: var(--primary-light); --accent-dark: var(--accent-light);
-            --danger-dark: var(--danger-light); --warning-dark: var(--warning-light);
-            --glow-primary: none; --glow-accent: none; --glow-danger: none; --glow-warning: none;
-        }
-        .background-grid {
-            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-            background-image: linear-gradient(rgba(88, 166, 255, 0.07) 1px, transparent 1px), linear-gradient(to right, rgba(88, 166, 255, 0.07) 1px, transparent 1px);
-            background-size: 40px 40px; z-index: -1;
-        }
-        .app-container {
-            display: flex; flex-direction: column; height: 100%;
-            max-width: 600px; margin: 0 auto;
-            padding-top: var(--safe-area-top); padding-bottom: var(--safe-area-bottom);
-        }
-        .fade-in { animation: fadeIn 0.8s ease-out forwards; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        .app-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 0; }
-        .greeting { font-size: 1.2rem; font-weight: 700; text-shadow: var(--glow-primary); }
-        .header-controls { display: flex; align-items: center; gap: 8px; }
-        .user-switcher { display: flex; background-color: rgba(0,0,0,0.2); padding: 4px; border-radius: 99px; position: relative; }
-        .user-btn { border: none; background: none; color: var(--text-secondary-dark); padding: 8px 16px; border-radius: 99px; font-weight: 700; cursor: pointer; transition: color 0.3s ease; z-index: 2; font-family: 'Inter', sans-serif; }
-        .user-btn.active { color: #fff; }
-        .user-switcher-indicator { position: absolute; top: 4px; height: calc(100% - 8px); background-image: linear-gradient(45deg, var(--primary-dark), var(--accent-dark)); border-radius: 99px; transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1); z-index: 1; box-shadow: var(--glow-primary); }
-        .header-icon-btn { background: none; border: none; cursor: pointer; color: var(--text-secondary-dark); padding: 8px; transition: color 0.2s, text-shadow 0.2s; }
-        .header-icon-btn:hover { color: var(--primary-dark); text-shadow: var(--glow-primary); }
-        .header-icon-btn svg { width: 24px; height: 24px; }
-        .main-content { flex-grow: 1; display: flex; flex-direction: column; overflow-y: auto; padding-right: 8px; }
-        .timer-card { background-color: var(--card-dark); border: 1px solid rgba(88, 166, 255, 0.3); border-radius: 24px; padding: 32px; text-align: center; margin-bottom: 24px; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); box-shadow: 0 0 30px rgba(0,0,0,0.2); flex-shrink: 0; }... .timer-display { font-family: 'Roboto Mono', monospace; font-size: 4.5rem; font-weight: 700; color: var(--text-dark); margin: 0; font-variant-numeric: tabular-nums; text-shadow: var(--glow-primary); transition: color 0.3s, text-shadow 0.3s; }
-        .timer-display.running { color: var(--accent-dark); text-shadow: var(--glow-accent); }
-        .timer-display.paused { color: var(--warning-dark); text-shadow: var(--glow-warning); }
-        .live-earnings { font-family: 'Roboto Mono', monospace; font-size: 1.5rem; color: var(--accent-dark); font-weight: 700; margin: 8px 0 24px 0; height: 2rem; text-shadow: var(--glow-accent); transition: opacity 0.3s; }
-        .timer-controls { display: flex; gap: 16px; justify-content: center; align-items: center; min-height: 62px; }
-        .timer-btn { border: 2px solid transparent; border-radius: 99px; padding: 16px 32px; font-size: 1rem; font-weight: 700; cursor: pointer; transition: all 0.3s ease; min-width: 140px; color: #fff; font-family: 'Inter', sans-serif; }
-        .timer-btn:active { transform: scale(0.97); }
-        .start-btn { background-image: linear-gradient(45deg, var(--accent-dark), #1f9a55); box-shadow: var(--glow-accent); }
-        .stop-btn { background-image: linear-gradient(45deg, var(--danger-dark), #c43e37); box-shadow: var(--glow-danger); }
-        .pause-btn { background-image: linear-gradient(45deg, var(--warning-dark), #d1a027); box-shadow: var(--glow-warning); }
-        .retro-start-input { font-family: 'Roboto Mono', monospace; padding: 12px; border-radius: 12px; border: 1px solid rgba(88, 166, 255, 0.3); background-color: var(--bg-dark); color: var(--text-dark); font-size: 0.9rem; width: 100px; }
-        .stats-container { flex-grow: 1; }
-        .stats-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-        .stats-title { font-size: 1.2rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
-        .view-switcher { display: flex; background-color: rgba(0,0,0,0.2); padding: 4px; border-radius: 99px; }
-        .view-btn { background: none; border: none; padding: 6px 12px; border-radius: 99px; font-weight: 700; color: var(--text-secondary-dark); cursor: pointer; transition: all 0.3s ease; }
-        .view-btn.active { background-color: var(--primary-dark); color: #fff; box-shadow: var(--glow-primary); }
-        .summary-card { background-color: var(--card-dark); border: 1px solid rgba(88, 166, 255, 0.2); border-radius: 16px; padding: 24px; backdrop-filter: blur(10px); margin-bottom: 24px; display: flex; justify-content: space-around; text-align: center; }
-        .summary-item h3 { margin: 0 0 8px 0; font-size: 0.9rem; color: var(--text-secondary-dark); font-weight: 400; text-transform: uppercase; letter-spacing: 1px; }
-        .summary-item p { margin: 0; font-size: 1.75rem; font-weight: 700; color: var(--text-dark); font-family: 'Roboto Mono', monospace; }
-        
-        /* --- NOVÉ STYLY PRO SWIPE GESTA --- */
-        .entry-list { list-style: none; padding: 0; margin: 0; position: relative; }
-        .entry-list::before { content: ''; position: absolute; left: 8px; top: 0; bottom: 0; width: 2px; background-color: rgba(88, 166, 255, 0.2); }
-        .entry-item-wrapper { position: relative; overflow: hidden; margin-bottom: 12px; }
-        .entry-item-actions { position: absolute; top: 0; right: 0; height: 100%; display: flex; align-items: center; }
-        .entry-item-actions .entry-action-btn { width: 70px; height: 100%; border-radius: 0; display: flex; align-items: center; justify-content: center; color: white; transition: background-color 0.2s; }
-        .entry-item-actions .edit { background-color: var(--primary-dark); }
-        .entry-item-actions .delete { background-color: var(--danger-dark); }
-        .entry-item { 
-            display: flex; align-items: center; padding: 16px 0 16px 32px;
-            position: relative; animation: slideIn 0.4s ease-out forwards;
-            background-color: var(--bg-dark); /* Důležité pro překrytí akcí */
-            transition: transform 0.3s ease-out;
-            touch-action: pan-y; /* Povolí vertikální scroll, ale zachytí horizontální swipe */
-        }
-        .entry-item::before { content: ''; position: absolute; left: 0; top: 22px; width: 18px; height: 18px; border-radius: 50%; background-color: var(--bg-dark); border: 3px solid var(--primary-dark); transition: all 0.3s; }
-        .entry-item:hover::before { box-shadow: var(--glow-primary); transform: scale(1.1); }
-        @keyframes slideIn { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
-        .entry-details { flex-grow: 1; }
-        .entry-date { font-weight: 700; color: var(--text-dark); }
-        .entry-time { font-size: 0.9rem; color: var(--text-secondary-dark); }
-        .entry-duration { font-family: 'Roboto Mono', monospace; font-size: 1.25rem; font-weight: 700; color: var(--primary-dark); text-shadow: var(--glow-primary); margin-right: 16px; }
-        
-        .no-entries { text-align: center; color: var(--text-secondary-dark); padding: 40px; }
-        .app-footer { padding: 20px 0; text-align: center; display: flex; justify-content: center; gap: 16px; flex-shrink: 0;}
-        .footer-btn { background: transparent; border: 1px solid var(--primary-dark); color: var(--primary-dark); padding: 10px 20px; border-radius: 99px; font-weight: 700; cursor: pointer; transition: all 0.3s ease; }
-        .footer-btn:hover { background-color: var(--primary-dark); color: #fff; box-shadow: var(--glow-primary); }
-        .footer-btn:active { transform: scale(0.97); }
-        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; opacity: 0; visibility: hidden; transition: all 0.3s ease; z-index: 1000; backdrop-filter: blur(5px); }
-        .modal-overlay.visible { opacity: 1; visibility: visible; }
-        .modal-content { background: var(--card-dark); color: var(--text-dark); border: 1px solid rgba(88, 166, 255, 0.3); padding: 24px; border-radius: 24px; width: 90%; max-width: 400px; transform: scale(0.9); transition: transform 0.3s ease; box-shadow: 0 0 40px rgba(0,0,0,0.5); }
-        .modal-overlay.visible .modal-content { transform: scale(1); }
-        .modal-content h2 { margin-top: 0; text-shadow: var(--glow-primary); }
-        .modal-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px; }
-        .modal-btn { padding: 10px 20px; border-radius: 99px; border: none; font-weight: 700; cursor: pointer; }
-        .modal-btn.primary { background-color: var(--primary-dark); color: #fff; }
-        .modal-btn.secondary { background-color: rgba(255,255,255,0.1); color: var(--text-dark); }
-        .modal-input-group { margin-bottom: 16px; }... .modal-input-group label { display: block; margin-bottom: 4px; font-size: 0.9rem; color: var(--text-secondary-dark); }
-        .modal-input-group input { width: 100%; padding: 10px; border-radius: 12px; border: 1px solid rgba(88, 166, 255, 0.3); background-color: var(--bg-dark); color: var(--text-dark); font-family: 'Inter', sans-serif; }
-        .modal-input-row { display: flex; gap: 12px; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<base href="/worktime-tracker-pwa/">
 
-        /* --- Fáze 1 vylepšení pro iPhone: Nové styly pro iOS komponenty, FAB, pull-to-refresh --- */
-        /* iOS-style segmented control (nahrazení view-switcher) */
-        .ios-segmented-control { display: flex; background-color: rgba(0,0,0,0.2); padding: 4px; border-radius: 10px; position: relative; }
-        .ios-segment { background: none; border: none; padding: 8px 16px; font-weight: 600; color: var(--text-secondary-dark); cursor: pointer; transition: color 0.3s; z-index: 2; font-size: 0.9rem; }
-        .ios-segment.active { color: #fff; }
-        .ios-segment-indicator { position: absolute; top: 4px; height: calc(100% - 8px); background-color: var(--primary-dark); border-radius: 8px; transition: all 0.3s ease; box-shadow: var(--glow-primary); z-index: 1; }
+<!-- PWA Meta Tags for iOS -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="WorkTime">
+<meta name="theme-color" content="#0D1117">
 
-        /* iOS-style buttons */
-        .ios-button { min-height: 44px; border-radius: 10px; font-size: 1rem; font-weight: 600; touch-action: manipulation; -webkit-touch-callout: none; }
+<title>WorkTime Tracker</title>
 
-        /* Floating Action Button (FAB) */
-        .fab { position: fixed; bottom: calc(20px + var(--safe-area-bottom)); right: 20px; width: 56px; height: 56px; border-radius: 50%; background-image: linear-gradient(45deg, var(--accent-dark), var(--primary-dark)); box-shadow: 0 4px 8px rgba(0,0,0,0.3), var(--glow-accent); color: #fff; font-size: 24px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: transform 0.3s; z-index: 100; }
-        .fab:active { transform: scale(0.95); }
+<style>
+/* -- Globální styly a CSS proměnné -- */
+:root {
+--accent: #39D353;
+--bg: #0D1117;
+--text: #E6EDF3;
+--muted: #8B949E;
+--surface: #161B22;
+--border: #30363d;
+--danger: #f85149;
+--success: #39D353;
+--warning: #d29922;
 
-        /* Pull-to-refresh styles */
-        .pull-indicator { position: absolute; top: -50px; left: 0; right: 0; height: 50px; display: flex; align-items: center; justify-content: center; transition: transform 0.3s; }
-        .refresh-spinner { width: 24px; height: 24px; border: 3px solid var(--primary-dark); border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite; display: none; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .main-content.pulling .pull-indicator { transform: translateY(50px); }
-        .main-content.refreshing .refresh-spinner { display: block; }
+--safe-area-top: env(safe-area-inset-top, 0px);
+--safe-area-bottom: env(safe-area-inset-bottom, 0px);
+--safe-area-left: env(safe-area-inset-left, 0px);
+--safe-area-right: env(safe-area-inset-right, 0px);
+}
 
-        /* Optimalizace pro iPhone: prefers-reduced-motion */
-        @media (prefers-reduced-motion: reduce) {
-            * { transition: none !important; animation: none !important; }
-        }
-    </style>
+.theme-light {
+--bg: #ffffff;
+--text: #1f2328;
+--muted: #656d76;
+--surface: #f6f8fa;
+--border: #d0d7de;
+}
+
+@media (prefers-color-scheme: light) {
+:root:not(.theme-dark) {
+--bg: #ffffff;
+--text: #1f2328;
+--muted: #656d76;
+--surface: #f6f8fa;
+--border: #d0d7de;
+}
+}
+
+@media (prefers-reduced-motion: reduce) {
+*, *::before, *::after {
+animation-duration: 0.01ms !important;
+animation-iteration-count: 1 !important;
+transition-duration: 0.01ms !important;
+scroll-behavior: auto !important;
+}
+}
+
+html, body {
+margin: 0;
+padding: 0;
+height: 100%;
+width: 100%;
+overflow: hidden;
+font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+background-color: var(--bg);
+color: var(--text);
+-webkit-font-smoothing: antialiased;
+-moz-osx-font-smoothing: grayscale;
+-webkit-tap-highlight-color: transparent;
+}
+
+#app-container {
+display: flex;
+flex-direction: column;
+height: 100%;
+width: 100%;
+position: relative;
+}
+
+/* -- Horní lišta -- */
+.app-header {
+padding: 10px 15px;
+padding-top: calc(10px + var(--safe-area-top));
+background-color: var(--surface);
+border-bottom: 1px solid var(--border);
+display: flex;
+justify-content: space-between;
+align-items: center;
+flex-shrink: 0;
+position: sticky;
+top: 0;
+z-index: 10;
+}
+
+.user-switcher {
+display: flex;
+align-items: center;
+gap: 10px;
+cursor: pointer;
+}
+
+.user-avatar {
+width: 36px;
+height: 36px;
+border-radius: 50%;
+display: flex;
+align-items: center;
+justify-content: center;
+font-weight: bold;
+font-size: 16px;
+color: var(--bg);
+}
+
+.user-name {
+font-weight: 600;
+}
+
+.header-summary {
+text-align: right;
+}
+
+.summary-time {
+font-size: 16px;
+font-weight: 600;
+}
+
+.summary-earnings {
+font-size: 12px;
+color: var(--muted);
+}
+
+/* -- iOS Segmented Control -- */
+.ios-nav {
+padding: 10px 15px;
+background-color: var(--surface);
+border-bottom: 1px solid var(--border);
+flex-shrink: 0;
+}
+
+.ios-segmented-control {
+display: flex;
+width: 100%;
+background-color: var(--bg);
+border-radius: 8px;
+padding: 2px;
+position: relative;
+border: 1px solid var(--border);
+}
+
+.ios-segment {
+flex: 1;
+padding: 8px 0;
+text-align: center;
+font-size: 14px;
+font-weight: 500;
+cursor: pointer;
+color: var(--muted);
+background: none;
+border: none;
+position: relative;
+z-index: 2;
+transition: color 0.3s ease;
+touch-action: manipulation;
+}
+
+.ios-segment.active {
+color: var(--text);
+}
+
+.ios-segment-indicator {
+position: absolute;
+top: 2px;
+bottom: 2px;
+width: calc(25% - 2px);
+background-color: var(--surface);
+border-radius: 6px;
+box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+z-index: 1;
+border: 1px solid var(--border);
+}
+
+/* -- Hlavní obsah -- */
+.main-content {
+flex-grow: 1;
+overflow-y: auto;
+-webkit-overflow-scrolling: touch;
+position: relative;
+}
+
+.app-view {
+display: none;
+padding: 15px;
+padding-bottom: calc(90px + var(--safe-area-bottom)); /* Prostor pro FAB a spodní lištu */
+}
+
+.app-view.active {
+display: block;
+}
+
+/* -- Pull to Refresh -- */
+#pull-to-refresh-indicator {
+position: absolute;
+top: -50px;
+left: 0;
+right: 0;
+height: 50px;
+display: flex;
+align-items: center;
+justify-content: center;
+z-index: 0;
+color: var(--muted);
+font-size: 24px;
+opacity: 0;
+transition: opacity 0.2s ease;
+}
+#pull-to-refresh-indicator .arrow { transform: rotate(180deg); transition: transform 0.2s ease; }
+#pull-to-refresh-indicator.ready .arrow { transform: rotate(0deg); }
+#pull-to-refresh-indicator .spinner { display: none; }
+#pull-to-refresh-indicator.refreshing .arrow { display: none; }
+#pull-to-refresh-indicator.refreshing .spinner { display: block; animation: spin 1s linear infinite; }
+@keyframes spin { 100% { transform: rotate(360deg); } }
+
+/* -- FAB (Floating Action Button) -- */
+.fab {
+position: fixed;
+bottom: calc(20px + var(--safe-area-bottom));
+right: calc(20px + var(--safe-area-right));
+width: 60px;
+height: 60px;
+border-radius: 50%;
+background: linear-gradient(45deg, var(--accent), #25a244);
+color: white;
+border: none;
+display: flex;
+align-items: center;
+justify-content: center;
+box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+cursor: pointer;
+z-index: 100;
+transition: transform 0.2s ease, box-shadow 0.2s ease;
+touch-action: manipulation;
+}
+
+.fab:active {
+transform: scale(0.95);
+box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+.fab svg {
+width: 28px;
+height: 28px;
+}
+
+/* -- UI Komponenty -- */
+.ios-button {
+display: inline-block;
+width: 100%;
+min-height: 44px;
+padding: 10px 20px;
+font-size: 17px;
+font-weight: 500;
+text-align: center;
+border: none;
+border-radius: 10px;
+cursor: pointer;
+background-color: var(--surface);
+color: var(--accent);
+transition: background-color 0.2s ease;
+touch-action: manipulation;
+}
+
+.ios-button.primary {
+background-color: var(--accent);
+color: white;
+}
+
+.ios-button.danger {
+background-color: var(--danger);
+color: white;
+}
+.ios-button:disabled {
+opacity: 0.5;
+cursor: not-allowed;
+}
+
+.ios-button:not(:disabled):active {
+filter: brightness(0.9);
+}
+
+.ios-button:focus-visible {
+outline: none;
+box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 20%, transparent);
+}
+
+.form-group {
+margin-bottom: 20px;
+}
+
+.form-group label {
+display: block;
+font-size: 14px;
+color: var(--muted);
+margin-bottom: 8px;
+}
+
+.ios-input {
+width: 100%;
+padding: 12px 15px;
+font-size: 16px;
+background-color: var(--surface);
+color: var(--text);
+border: 1px solid var(--border);
+border-radius: 8px;
+box-sizing: border-box;
+}
+
+.ios-input:focus {
+outline: none;
+border-color: var(--accent);
+box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 20%, transparent);
+}
+
+/* -- Pohled Časovače -- */
+#timer-view .timer-display {
+text-align: center;
+margin: 40px 0;
+}
+
+#timer-view .timer-time {
+font-size: 72px;
+font-weight: 200;
+letter-spacing: 2px;
+font-variant-numeric: tabular-nums;
+}
+
+#timer-view .timer-earnings {
+font-size: 24px;
+color: var(--muted);
+margin-top: 10px;
+}
+
+#timer-view .timer-task {
+text-align: center;
+font-size: 18px;
+color: var(--muted);
+min-height: 27px;
+}
+
+#timer-view .timer-controls {
+display: flex;
+justify-content: center;
+gap: 15px;
+margin-top: 30px;
+}
+
+/* -- Pohled Záznamů -- */
+.search-filter-bar {
+display: flex;
+gap: 10px;
+margin-bottom: 15px;
+}
+.search-filter-bar .ios-input { flex-grow: 1; }
+
+.entry-item {
+background-color: var(--surface);
+border-radius: 10px;
+padding: 15px;
+margin-bottom: 10px;
+display: flex;
+justify-content: space-between;
+align-items: center;
+position: relative;
+overflow: hidden;
+}
+
+.entry-item-content {
+transition: transform 0.3s ease;
+}
+
+.entry-item.swiped .entry-item-content {
+transform: translateX(-140px);
+}
+
+.entry-task { font-weight: 600; }
+.entry-details { font-size: 14px; color: var(--muted); margin-top: 5px; }
+.entry-time-info .duration { font-size: 18px; font-weight: 500; }
+.entry-time-info .earnings { font-size: 14px; color: var(--success); }
+
+.swipe-actions {
+position: absolute;
+top: 0;
+right: 0;
+height: 100%;
+display: flex;
+}
+
+.swipe-action {
+width: 70px;
+display: flex;
+align-items: center;
+justify-content: center;
+color: white;
+cursor: pointer;
+}
+
+.swipe-action.edit { background-color: #0d8eff; }
+.swipe-action.delete { background-color: var(--danger); }
+
+/* -- Modální okna -- */
+.modal-overlay {
+position: fixed;
+top: 0;
+left: 0;
+width: 100%;
+height: 100%;
+background-color: rgba(0,0,0,0.6);
+display: flex;
+align-items: flex-end;
+justify-content: center;
+z-index: 1000;
+opacity: 0;
+visibility: hidden;
+transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.modal-overlay.visible {
+opacity: 1;
+visibility: visible;
+}
+
+.modal-content {
+background-color: var(--surface);
+width: 100%;
+max-width: 500px;
+max-height: 90vh;
+border-radius: 20px 20px 0 0;
+padding: 20px;
+padding-bottom: calc(20px + var(--safe-area-bottom));
+box-sizing: border-box;
+overflow-y: auto;
+transform: translateY(100%);
+transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.modal-overlay.visible .modal-content {
+transform: translateY(0);
+}
+
+.modal-header {
+display: flex;
+justify-content: space-between;
+align-items: center;
+margin-bottom: 20px;
+}
+
+.modal-title {
+font-size: 20px;
+font-weight: 600;
+}
+
+.close-modal-btn {
+background: var(--bg);
+border: 1px solid var(--border);
+color: var(--muted);
+width: 30px;
+height: 30px;
+border-radius: 50%;
+cursor: pointer;
+font-size: 16px;
+}
+
+/* -- Toast/Undo notifikace -- */
+#toast-container {
+position: fixed;
+bottom: calc(90px + var(--safe-area-bottom));
+left: 50%;
+transform: translateX(-50%);
+z-index: 1100;
+display: flex;
+flex-direction: column;
+align-items: center;
+gap: 10px;
+}
+
+.toast {
+background-color: #323232;
+color: white;
+padding: 12px 20px;
+border-radius: 25px;
+font-size: 14px;
+display: flex;
+align-items: center;
+gap: 15px;
+box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+opacity: 0;
+transform: translateY(20px);
+transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.toast.show {
+opacity: 1;
+transform: translateY(0);
+}
+
+.toast-undo-btn {
+background: none;
+border: none;
+color: var(--accent);
+font-weight: bold;
+cursor: pointer;
+padding: 0;
+}
+
+</style>
 </head>
 <body>
-    <div class="background-grid"></div>
-    <div class="app-container fade-in">
-        <header class="app-header">
-            <h1 class="greeting" id="greeting"></h1>
-            <div class="header-controls">
-                <div class="user-switcher" id="user-switcher">
-                    <div class="user-switcher-indicator" id="user-switcher-indicator"></div>
-                    <button class="user-btn" data-user="Marty">Marty</button>
-                    <button class="user-btn" data-user="Čenda">Čenda</button>
-                    <button class="user-btn" data-user="Kuba">Kuba</button>
-                </div>
-                <button class="header-icon-btn" id="settings-btn" aria-label="Nastavení"></button>
-                <button class="header-icon-btn" id="theme-switcher" aria-label="Přepnout motiv"></button>
-            </div>
-        </header>
-        <main class="main-content" id="main-content">
-            <!-- Pull-to-refresh indicator -->
-            <div class="pull-indicator" id="pull-indicator">
-                <div class="refresh-spinner"></div>
-            </div>
-            <div class="timer-card">
-                <h2 class="timer-display" id="timer-display">00:00:00</h2>
-                <p class="live-earnings" id="live-earnings"></p>
-                <div class="timer-controls" id="timer-controls"></div>
-            </div>
-            <div class="stats-container">
-                <div class="stats-header">
-                    <h2 class="stats-title">Přehled</h2>
-                    <!-- Nahrazeno iOS segmented control -->
-                    <div class="ios-segmented-control" id="ios-view-switcher">
-                        <div class="ios-segment-indicator" id="ios-segment-indicator"></div>
-                        <button class="ios-segment active" data-view="day">Den</button>
-                        <button class="ios-segment" data-view="week">Týden</button>
-                        <button class="ios-segment" data-view="month">Měsíc</button>
-                    </div>
-                </div>
-                <div class="summary-card">
-                    <div class="summary-item"><h3>Odpracováno</h3><p id="summary-time">0h 0m</p></div>
-                    <div class="summary-item"><h3>Výdělek</h3><p id="summary-earnings">0 Kč</p></div>
-                </div>
-                <ul class="entry-list" id="entry-list"></ul>
-            </div>
-        </main>
-        <footer class="app-footer">
-            <button class="footer-btn" id="manual-entry-btn">Přidat ručně</button>
-            <button class="footer-btn" id="export-btn">Exportovat</button>
-            <!-- Nové tlačítko pro zálohu -->
-            <button class="footer-btn" id="backup-btn">Záloha</button>
-        </footer>
-        <!-- Floating Action Button -->
-        <button class="fab" id="fab-btn">+</button>
-    </div>
-    <!-- Modals -->
-    <div id="settings-modal" class="modal-overlay">
-        <div class="modal-content">
-            <h2>Nastavení</h2>
-            <div class="modal-input-group">
-                <label for="rate-marty">Sazba Marty (Kč/h)</label>
-                <input type="number" id="rate-marty" min="0">
-            </div>
-            <div class="modal-input-group">
-                <label for="rate-cenda">Sazba Čendy (Kč/h)</label>
-                <input type="number" id="rate-cenda" min="0">
-            </div>
-            <div class="modal-input-group">
-                <label for="rate-kuba">Sazba Kuby (Kč/h)</label>
-                <input type="number" id="rate-kuba" min="0">
-            </div>
-            <div class="modal-actions">
-                <button id="settings-cancel" class="modal-btn secondary">Zrušit</button>
-                <button id="settings-save" class="modal-btn primary">Uložit</button>
-            </div>
-        </div>
-    </div>
-    <div id="manual-entry-modal" class="modal-overlay">
-        <div class="modal-content">
-            <h2>Ruční přidání</h2>
-            <form id="manual-entry-form">
-                <div class="modal-input-group">
-                    <label for="manual-date">Datum</label>
-                    <input type="date" id="manual-date" required>
-                </div>
-                <div class="modal-input-group">
-                    <label for="manual-duration">Doba (např. 2:30, 90m, 1.5h)</label>
-                    <input type="text" id="manual-duration" required>
-                </div>
-                <div class="modal-actions">
-                    <button type="button" id="manual-entry-cancel" class="modal-btn secondary">Zrušit</button>
-                    <button type="submit" class="modal-btn primary">Přidat</button>
-                </div>
-            </form>
-        </div>
-    </div>
-    <div id="edit-entry-modal" class="modal-overlay">
-        <div class="modal-content">
-            <h2>Upravit záznam</h2>
-            <form id="edit-entry-form">
-                <input type="hidden" id="edit-entry-id">
-                <div class="modal-input-group">
-                    <label for="edit-date">Datum</label>
-                    <input type="date" id="edit-date" required>
-                </div>
-                <div class="modal-input-row">
-                    <div class="modal-input-group">
-                        <label for="edit-start-time">Začátek</label>
-                        <input type="time" id="edit-start-time" required>
-                    </div>
-                    <div class="modal-input-group">
-                        <label for="edit-end-time">Konec</label>
-                        <input type="time" id="edit-end-time" required>
-                    </div>
-                </div>
-                <div class="modal-actions">
-                    <button type="button" id="edit-entry-cancel" class="modal-btn secondary">Zrušit</button>
-                    <button type="submit" class="modal-btn primary">Uložit</button>
-                </div>
-            </form>
-        </div>
-    </div>
-    <div id="confirm-delete-modal" class="modal-overlay">
-        <div class="modal-content">
-            <h2>Potvrdit smazání</h2>
-            <p>Opravdu chcete smazat tento záznam?</p>
-            <div class="modal-actions">
-                <button id="delete-cancel" class="modal-btn secondary">Ne</button>
-                <button id="delete-confirm" class="modal-btn primary">Ano</button>
-            </div>
-        </div>
-    </div>
-    <div id="export-modal" class="modal-overlay">
-        <div class="modal-content">
-            <h2>Možnosti exportu</h2>
-            <p>Vyberte formát pro export dat aktuálního uživatele.</p>
-            <div class="modal-actions" style="flex-direction: column; gap: 16px; align-items: stretch;">
-                <button id="export-csv" class="modal-btn primary">Exportovat do CSV</button>
-                <button id="export-pdf" class="modal-btn secondary">Exportovat do PDF (brzy)</button>
-                <button id="export-excel" class="modal-btn secondary">Exportovat do Excel (brzy)</button>
-            </div>
-            <div class="modal-actions">
-                <button id="export-cancel" class="modal-btn secondary">Zrušit</button>
-            </div>
-        </div>
-    </div>
-    <!-- Nový modal pro import zálohy (pro BackupManager) -->
-    <div id="backup-modal" class="modal-overlay">
-        <div class="modal-content">
-            <h2>Záloha a obnova</h2>
-            <button id="backup-export" class="modal-btn primary">Exportovat zálohu</button>
-            <input type="file" id="backup-import" accept=".json" style="margin-top: 16px;">
-            <div class="modal-actions">
-                <button id="backup-close" class="modal-btn secondary">Zavřít</button>
-            </div>
-        </div>
-    </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // --- CONSTANTS ---
-            const USERS = ['Marty', 'Čenda', 'Kuba'];
-            const DB_KEY = 'workTimeTrackerData_v4.3';
-            const AUTO_BACKUP_KEY = 'worktime_auto_backup'; // Pro automatické zálohy
+<div id="app-container">
+<!-- Pull to Refresh Indikátor -->
+<div id="pull-to-refresh-indicator">
+<div class="arrow">↓</div>
+<div class="spinner">⏳</div>
+</div>
 
-            // --- DOM ELEMENTS ---
-            const greetingEl = document.getElementById('greeting');
-            const userSwitcher = document.getElementById('user-switcher');
-            const userSwitcherIndicator = document.getElementById('user-switcher-indicator');
-            const themeSwitcher = document.getElementById('theme-switcher');
-            const settingsBtn = document.getElementById('settings-btn');
-            const timerDisplay = document.getElementById('timer-display');
-            const liveEarningsEl = document.getElementById('live-earnings');
-            const timerControls = document.getElementById('timer-controls');
-            // viewSwitcher nahrazeno iosViewSwitcher
-            const iosViewSwitcher = document.getElementById('ios-view-switcher');
-            const iosSegmentIndicator = document.getElementById('ios-segment-indicator');
-            const summaryTime = document.getElementById('summary-time');
-            const summaryEarnings = document.getElementById('summary-earnings');
-            const entryList = document.getElementById('entry-list');
-            const exportBtn = document.getElementById('export-btn');
-            const manualEntryBtn = document.getElementById('manual-entry-btn');
-            // Nové prvky pro Fáze 1
-            const fabBtn = document.getElementById('fab-btn');
-            const mainContent = document.getElementById('main-content');
-            const backupBtn = document.getElementById('backup-btn');
-            const backupModal = document.getElementById('backup-modal');
-            const backupExport = document.getElementById('backup-export');
-            const backupImport = document.getElementById('backup-import');
-            const backupClose = document.getElementById('backup-close');
-            // Modals
-            const settingsModal = document.getElementById('settings-modal');
-            const manualEntryModal = document.getElementById('manual-entry-modal');
-            const editEntryModal = document.getElementById('edit-entry-modal');
-            const confirmDeleteModal = document.getElementById('confirm-delete-modal');
-            const exportModal = document.getElementById('export-modal');
+<!-- Horní lišta -->
+<header class="app-header">
+<div class="user-switcher" id="user-switcher">
+<div class="user-avatar" id="user-avatar"></div>
+<span class="user-name" id="user-name"></span>
+</div>
+<div class="header-summary">
+<div class="summary-time" id="summary-time">0:00:00</div>
+<div class="summary-earnings" id="summary-earnings">0.00 CZK</div>
+</div>
+</header>
 
-            // --- ICONS ---
-            const sunIcon = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" /></svg>`;
-            const moonIcon = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z" /></svg>`;
-            const settingsIcon = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.438.995s.145.755.438.995l1.003.827c.446.367.533.98.26 1.431l-1.296 2.247a1.125 1.125 0 01-1.37.49l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.063-.374-.313-.686-.645-.87a6.52 6.52 0 01-.22-.127c-.324-.196-.72-.257-1.075-.124l-1.217.456a1.125 1.125 0 01-1.37-.49l-1.296-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.437-.995s-.145-.755-.437-.995l-1.004-.827a1.125 1.125 0 01-.26-1.431l1.296-2.247a1.125 1.125 0 011.37-.49l1.217.456c.355.133.75.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>`;
-            const deleteIcon = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" width="20" height="20"><path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.134-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.067-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" /></svg>`;
-            const editIcon = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" width="20" height="20"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" /></svg>`;
+<!-- Navigace -->
+<nav class="ios-nav">
+<div class="ios-segmented-control" id="nav-tabs">
+<div class="ios-segment-indicator" id="nav-indicator"></div>
+<button class="ios-segment active" data-view="timer-view">Časovač</button>
+<button class="ios-segment" data-view="entries-view">Záznamy</button>
+<button class="ios-segment" data-view="stats-view">Statistiky</button>
+<button class="ios-segment" data-view="settings-view">Nastavení</button>
+</div>
+</nav>
 
-            // --- APP STATE ---
-            let state = {};
-            let deleteResolver = null;
-            let enhancedMobileFeatures;
-            let exportManager;
-            let notificationManager;
-            let pullToRefreshManager;
-            let backupManager;
-            const EntrySchema = {
-                validate(entry) {
-                    if (!entry.id || !entry.user || !entry.startTime || !entry.endTime) {
-                        throw new Error('Neplatná struktura záznamu: Chybí základní pole.');
-                    }
-                    if (typeof entry.startTime !== 'number' || typeof entry.endTime !== 'number') {
-                        throw new Error('Neplatný typ času. Očekáván timestamp.');
-                    }
-                    if (entry.endTime <= entry.startTime) {
-                        throw new Error('Čas ukončení musí být větší než čas začátku.');
-                    }
-                    if (typeof entry.duration !== 'number' || entry.duration < 0) {
-                        throw new Error('Doba práce (duration) nemůže být záporná.');
-                    }
-                    return true;
-                }
-            };
+<!-- Hlavní obsah -->
+<main class="main-content">
+<!-- Pohled: Časovač -->
+<div id="timer-view" class="app-view active">
+<div class="timer-display">
+<div class="timer-time" id="timer-time">00:00:00</div>
+<div class="timer-earnings" id="timer-earnings">0.00 CZK</div>
+</div>
+<div class="timer-task" id="timer-task">Žádný aktivní úkol</div>
+<div class="timer-controls" id="timer-controls">
+<!-- Tlačítka se generují dynamicky -->
+</div>
+</div>
 
-            class ExportManager {
-                constructor(getState) {
-                    this.getState = getState;
-                }
-                exportToCSV() {
-                    const { entries, currentUser, settings } = this.getState();
-                    const userEntries = entries.filter(e => e.user === currentUser);
-                    if (userEntries.length === 0) {
-                        alert('Není co exportovat.');
-                        return;
-                    }
-                    let csvContent = "data:text/csv;charset=utf-8,Uživatel;Datum;Začátek;Konec;Doba (minuty);Sazba (Kč/h);Výdělek (Kč)\r\n";
-                    userEntries.forEach(entry => {
-                        const rate = settings.userRates[entry.user] || 250;
-                        const earnings = (entry.duration / (1000 * 60 * 60)) * rate;
-                        const row = [
-                            entry.user,
-                            new Date(entry.startTime).toLocaleDateString('cs-CZ'),
-                            new Date(entry.startTime).toLocaleTimeString('cs-CZ', {hour: '2-digit', minute: '2-digit'}),
-                            new Date(entry.endTime).toLocaleTimeString('cs-CZ', {hour: '2-digit', minute: '2-digit'}),
-                            Math.round(entry.duration / 60000),
-                            rate,
-                            earnings.toFixed(2).replace('.', ',')
-                        ].join(';');
-                        csvContent += row + "\r\n";
-                    });
-                    const link = document.createElement("a");
-                    link.setAttribute("href", encodeURI(csvContent));
-                    link.setAttribute("download", `export_${currentUser}_${new Date().toISOString().split('T')[0]}.csv`);
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                }
-                exportToPDF() {
-                    alert('Generování PDF reportu s grafy bude brzy dostupné! Prozatím použijte CSV.');
-                }
-                exportToExcel() {
-                    alert('XLSX export s pivotními tabulkami bude brzy dostupný! Prozatím použijte CSV.');
-                }
-            }
+<!-- Pohled: Záznamy -->
+<div id="entries-view" class="app-view">
+<div class="search-filter-bar">
+<input type="search" id="search-input" class="ios-input" placeholder="Hledat v záznamech...">
+</div>
+<div id="entries-list"></div>
+</div>
 
-            /* --- Fáze 1 vylepšení pro iPhone: Rozšířená třída EnhancedMobileFeatures s haptic feedbackem --- */
-            class EnhancedMobileFeatures {
-                constructor() {
-                    this.wakeLock = null;
-                }
-                async toggleWakeLock(enabled) {
-                    if ('wakeLock' in navigator) {
-                        try {
-                            if (enabled && !this.wakeLock) {
-                                this.wakeLock = await navigator.wakeLock.request('screen');
-                            } else if (!enabled && this.wakeLock) {
-                                await this.wakeLock.release();
-                                this.wakeLock = null;
-                            }
-                        } catch (err) {
-                            console.error(err);
-                        }
-                    }
-                }
-                vibrate(pattern = 10) {
-                    if ('vibrate' in navigator) {
-                        navigator.vibrate(pattern);
-                    }
-                }
-                // Nové metody pro haptic feedback (light, medium, heavy)
-                haptic(type = 'light') {
-                    if ('vibrate' in navigator) {
-                        const patterns = {
-                            light: 10,
-                            medium: [10, 20, 10],
-                            heavy: [50, 100, 50]
-                        };
-                        this.vibrate(patterns[type] || 10);
-                    }
-                }
-            }
+<!-- Pohled: Statistiky -->
+<div id="stats-view" class="app-view">
+<h3>Odpracovaný čas (tento týden)</h3>
+<canvas id="time-chart" width="400" height="200"></canvas>
+<h3>Výdělky podle kategorií</h3>
+<canvas id="earnings-chart" width="400" height="200"></canvas>
+<h3>Heatmapa produktivity</h3>
+<canvas id="heatmap-chart" width="400" height="250"></canvas>
+</div>
 
-            /* --- Fáze 1 vylepšení pro iPhone: Třída NotificationManager pro push notifikace --- */
-            class NotificationManager {
-                constructor() {
-                    this.permission = null;
-                    this.requestPermission();
-                    this.breakReminderInterval = null;
-                }
-                async requestPermission() {
-                    if ('Notification' in window) {
-                        this.permission = await Notification.requestPermission();
-                    }
-                }
-                showNotification(title, options) {
-                    if (this.permission === 'granted') {
-                        new Notification(title, options);
-                    }
-                }
-                startBreakReminder() {
-                    if (this.breakReminderInterval) clearInterval(this.breakReminderInterval);
-                    this.breakReminderInterval = setInterval(() => {
-                        this.showNotification('Připomínka přestávky', { body: 'Už jste pracovali 2 hodiny. Udělejte si přestávku!' });
-                    }, 2 * 60 * 60 * 1000); // Každé 2 hodiny
-                }
-                stopBreakReminder() {
-                    if (this.breakReminderInterval) clearInterval(this.breakReminderInterval);
-                }
-            }
+<!-- Pohled: Nastavení -->
+<div id="settings-view" class="app-view">
+<h3>Uživatelé</h3>
+<div id="users-list"></div>
+<button class="ios-button" id="add-user-btn" style="margin-top: 10px;">Přidat uživatele</button>
+<hr style="border: 1px solid var(--border); margin: 20px 0;">
 
-            /* --- Fáze 1 vylepšení pro iPhone: Třída PullToRefreshManager --- */
-            class PullToRefreshManager {
-                constructor(element, onRefresh) {
-                    this.element = element;
-                    this.onRefresh = onRefresh;
-                    this.touchStartY = 0;
-                    this.pullThreshold = 80;
-                    this.isPulling = false;
-                    this.setupListeners();
-                }
-                setupListeners() {
-                    this.element.addEventListener('touchstart', (e) => {
-                        if (this.element.scrollTop === 0) {
-                            this.touchStartY = e.touches[0].clientY;
-                            this.isPulling = true;
-                        }
-                    });
-                    this.element.addEventListener('touchmove', (e) => {
-                        if (!this.isPulling) return;
-                        const touchY = e.touches[0].clientY;
-                        const pullDistance = touchY - this.touchStartY;
-                        if (pullDistance > 0) {
-                            e.preventDefault();
-                            this.element.classList.add('pulling');
-                            if (pullDistance > this.pullThreshold) {
-                                this.element.classList.add('ready-to-refresh');
-                            }
-                        }
-                    });
-                    this.element.addEventListener('touchend', () => {
-                        if (this.isPulling) {
-                            if (this.element.classList.contains('ready-to-refresh')) {
-                                this.element.classList.remove('pulling', 'ready-to-refresh');
-                                this.element.classList.add('refreshing');
-                                setTimeout(() => {
-                                    this.onRefresh();
-                                    this.element.classList.remove('refreshing');
-                                }, 1000); // 1 sekunda simulace
-                            } else {
-                                this.element.classList.remove('pulling');
-                            }
-                            this.isPulling = false;
-                        }
-                    });
-                }
-            }
+<h3>Vzhled</h3>
+<div class="form-group">
+<label for="theme-select">Motiv</label>
+<select id="theme-select" class="ios-input">
+<option value="auto">Automatický</option>
+<option value="light">Světlý</option>
+<option value="dark">Tmavý</option>
+</select>
+</div>
 
-            /* --- Fáze 1 vylepšení pro iPhone: Třída BackupManager pro zálohy --- */
-            class BackupManager {
-                constructor(getState, setState) {
-                    this.getState = getState;
-                    this.setState = setState;
-                }
-                exportToJSON() {
-                    const data = JSON.stringify(this.getState());
-                    const blob = new Blob([data], { type: 'application/json' });
-                    const url = URL.createObjectURL(blob);
-                    const link = document.createElement('a');
-                    link.href = url;
-                    link.download = `worktime_backup_${new Date().toISOString().split('T')[0]}.json`;
-                    link.click();
-                    URL.revokeObjectURL(url);
-                }
-                importFromJSON(file) {
-                    const reader = new FileReader();
-                    reader.onload = (e) => {
-                        try {
-                            const importedState = JSON.parse(e.target.result);
-                            this.setState(importedState);
-                            alert('Data úspěšně obnovena.');
-                            updateUI();
-                        } catch (err) {
-                            alert('Chyba při importu: Neplatný soubor.');
-                        }
-                    };
-                    reader.readAsText(file);
-                }
-                autoBackup() {
-                    const today = new Date().toDateString();
-                    const lastBackup = localStorage.getItem(AUTO_BACKUP_KEY + '_date');
-                    if (lastBackup !== today) {
-                        localStorage.setItem(AUTO_BACKUP_KEY, JSON.stringify(this.getState()));
-                        localStorage.setItem(AUTO_BACKUP_KEY + '_date', today);
-                    }
-                }
-            }
+<h3>Notifikace a Haptika</h3>
+<div class="form-group">
+<label for="notifications-toggle">Notifikace</label>
+<select id="notifications-toggle" class="ios-input">
+<option value="true">Zapnuto</option>
+<option value="false">Vypnuto</option>
+</select>
+</div>
+<div class="form-group">
+<label for="haptics-toggle">Haptická odezva</label>
+<select id="haptics-toggle" class="ios-input">
+<option value="true">Zapnuto</option>
+<option value="false">Vypnuto</option>
+</select>
+</div>
 
-            // --- INITIALIZATION ---
-            function init() {
-                enhancedMobileFeatures = new EnhancedMobileFeatures(); // Rozšířená třída
-                exportManager = new ExportManager(() => state);
-                notificationManager = new NotificationManager(); // Nový manažer
-                pullToRefreshManager = new PullToRefreshManager(mainContent, updateUI); // Nový manažer
-                backupManager = new BackupManager(() => state, (newState) => { state = newState; saveState(); }); // Nový manažer
-                loadState();
-                setupPWA();
-                setupEventListeners();
-                if (state.timers[state.currentUser]?.startTime && !state.timers[state.currentUser]?.isPaused) {
-                    resumeTimer();
-                }
-                updateUI();
-                updateTimerUIForCurrentUser();
-                updateIosViewSwitcherUI(); // Nová funkce pro segmented control
-                backupManager.autoBackup(); // Automatická denní záloha
-                // Přidání iOS-style tříd k tlačítkům
-                document.querySelectorAll('.timer-btn, .footer-btn, .modal-btn, .user-btn, .ios-segment').forEach(btn => btn.classList.add('ios-button'));
-            }
+<h3>Obecné</h3>
+<div class="form-group">
+<label for="currency-select">Měna</label>
+<select id="currency-select" class="ios-input">
+<option value="CZK">CZK</option>
+<option value="EUR">EUR</option>
+<option value="USD">USD</option>
+</select>
+</div>
 
-            function loadState() {
-                const data = JSON.parse(localStorage.getItem(DB_KEY));
-                const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-                const defaultTimers = USERS.reduce((acc, user) => {
-                    acc[user] = { startTime: null, intervalId: null, isPaused: false, totalPausedDuration: 0, pauseStartTime: null };
-                    return acc;
-                }, {});
-                const defaultState = {
-                    currentUser: USERS[0],
-                    currentView: 'day',
-                    timers: defaultTimers,
-                    entries: [],
-                    settings: {
-                        theme: prefersDark ? 'dark' : 'light',
-                        userRates: {}
-                    }
-                };
-                state = { ...defaultState, ...data };
-                state.timers = { ...defaultTimers, ...state.timers };
-                state.settings = { ...defaultState.settings, ...state.settings };
-                state.settings.userRates = { ...defaultState.settings.userRates, ...state.settings.userRates };
-                document.body.classList.toggle('light-mode', state.settings.theme === 'light');
-                themeSwitcher.innerHTML = state.settings.theme === 'dark' ? sunIcon : moonIcon;
-            }
+<h3>Export</h3>
+<button class="ios-button" id="export-csv-btn">Exportovat do CSV</button>
+<button class="ios-button" id="export-pdf-btn" disabled style="margin-top: 10px;">Exportovat do PDF (připravuje se)</button>
 
-            function saveState() {
-                const stateToSave = JSON.parse(JSON.stringify(state));
-                for (const user in stateToSave.timers) {
-                    delete stateToSave.timers[user].intervalId;
-                }
-                localStorage.setItem(DB_KEY, JSON.stringify(stateToSave));
-            }
+<hr style="border: 1px solid var(--border); margin: 20px 0;">
 
-            function getCurrentUserRate() {
-                return state.settings.userRates[state.currentUser] || 250;
-            }
+<h3>Záloha a Obnova</h3>
+<button class="ios-button" id="backup-btn">Záloha / Obnova dat</button>
 
-            function setupPWA() {
-                const manifest = { "name": "WorkTime Tracker", "short_name": "WorkTime", "start_url": ".", "display": "standalone", "background_color": "#010409", "theme_color": "#39D353", "icons": [{"src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='115.2' fill='%230D1117'/%3E%3Cpath d='M100 256 L256 100 L412 256 L256 412 Z' fill='none' stroke='%2339D353' stroke-width='25'/%3E%3C/svg%3E", "sizes": "512x512", "type": "image/svg+xml" }] };
-                const manifestURL = `data:application/manifest+json,${encodeURIComponent(JSON.stringify(manifest))}`;
-                document.getElementById('manifest').setAttribute('href', manifestURL);
-                if ('serviceWorker' in navigator) {
-                    const swContent = `const CACHE_NAME = 'worktime-cache-v4.3'; self.addEventListener('install', e => e.waitUntil(caches.open(CACHE_NAME).then(c => c.add('/')))); self.addEventListener('fetch', e => e.respondWith(caches.match(e.request).then(r => r || fetch(e.request))));`;
-                    const swBlob = new Blob([swContent], { type: 'application/javascript' });
-                    navigator.serviceWorker.register(URL.createObjectURL(swBlob)).catch(err => console.error('SW reg failed:', err));
-                }
-            }
+<hr style="border: 1px solid var(--border); margin: 20px 0;">
 
-            // --- EVENT LISTENERS ---
-            function setupEventListeners() {
-                userSwitcher.addEventListener('click', handleUserSwitch);
-                themeSwitcher.addEventListener('click', toggleTheme);
-                timerControls.addEventListener('click', handleTimerControls);
-                // viewSwitcher nahrazeno iosViewSwitcher
-                iosViewSwitcher.addEventListener('click', handleViewSwitch);
-                exportBtn.addEventListener('click', () => exportModal.classList.add('visible'));
-                document.getElementById('export-cancel').addEventListener('click', () => exportModal.classList.remove('visible'));
-                document.getElementById('export-csv').addEventListener('click', () => {
-                    exportManager.exportToCSV();
-                    exportModal.classList.remove('visible');
-                });
-                document.getElementById('export-pdf').addEventListener('click', () => {
-                    exportManager.exportToPDF();
-                    exportModal.classList.remove('visible');
-                });
-                document.getElementById('export-excel').addEventListener('click', () => {
-                    exportManager.exportToExcel();
-                    exportModal.classList.remove('visible');
-                });
-                settingsBtn.addEventListener('click', openSettingsModal);
-                document.getElementById('settings-save').addEventListener('click', saveSettings);
-                document.getElementById('settings-cancel').addEventListener('click', () => settingsModal.classList.remove('visible'));
-                manualEntryBtn.addEventListener('click', openManualEntryModal);
-                document.getElementById('manual-entry-form').addEventListener('submit', handleManualSubmit);
-                document.getElementById('manual-entry-cancel').addEventListener('click', () => manualEntryModal.classList.remove('visible'));
-                document.getElementById('edit-entry-form').addEventListener('submit', handleEditSubmit);
-                document.getElementById('edit-entry-cancel').addEventListener('click', () => editEntryModal.classList.remove('visible'));
-                document.getElementById('delete-confirm').addEventListener('click', () => { if (deleteResolver) deleteResolver(true); confirmDeleteModal.classList.remove('visible'); });
-                document.getElementById('delete-cancel').addEventListener('click', () => { if (deleteResolver) deleteResolver(false); confirmDeleteModal.classList.remove('visible'); });
-                entryList.addEventListener('click', handleEntryActions);
-                setupSwipeListeners();
+<h3>Nástroje pro vývojáře</h3>
+<button class="ios-button" id="demo-data-btn">Vytvořit demo data</button>
+<button class="ios-button danger" id="clear-data-btn" style="margin-top: 10px;">Smazat všechna data</button>
+<div id="diag-info" style="font-size: 12px; color: var(--muted); margin-top: 15px;"></div>
+</div>
+</main>
 
-                // Nové event listeners pro Fáze 1
-                fabBtn.addEventListener('click', handleFabClick);
-                backupBtn.addEventListener('click', () => backupModal.classList.add('visible'));
-                backupExport.addEventListener('click', () => { backupManager.exportToJSON(); enhancedMobileFeatures.haptic('medium'); });
-                backupImport.addEventListener('change', (e) => { if (e.target.files[0]) backupManager.importFromJSON(e.target.files[0]); });
-                backupClose.addEventListener('click', () => backupModal.classList.remove('visible'));
+<!-- FAB -->
+<button class="fab" id="fab" aria-label="Start timer">
+<!-- Ikona se mění dynamicky -->
+</button>
+</div>
 
-                // Přidání haptic feedback na všechny kliky a gesty (např. na buttony)
-                document.querySelectorAll('button, .ios-button').forEach(el => {
-                    el.addEventListener('click', () => enhancedMobileFeatures.haptic('light'));
-                });
-                // Haptic na swipe gesty (přidáno do setupSwipeListeners)
-            }
+<!-- Toast kontejner -->
+<div id="toast-container"></div>
 
-            function setupSwipeListeners() {
-                let touchStartX = 0;
-                let touchCurrentX = 0;
-                let swipedItem = null;
-                const swipeThreshold = 50;
-                const maxSwipe = 140;
+<!-- Modální okna -->
+<div id="modal-container">
+<!-- Obsah modálů se generuje dynamicky -->
+</div>
 
-                entryList.addEventListener('touchstart', (e) => {
-                    const target = e.target.closest('.entry-item');
-                    if (!target) return;
-                    const currentlyOpen = document.querySelector('.entry-item.swiped');
-                    if (currentlyOpen && currentlyOpen !== target) {
-                        currentlyOpen.style.transform = 'translateX(0)';
-                        currentlyOpen.classList.remove('swiped');
-                    }
-                    swipedItem = target;
-                    touchStartX = e.targetTouches[0].clientX;
-                    swipedItem.style.transition = 'none';
-                });
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+'use strict';
 
-                entryList.addEventListener('touchmove', (e) => {
-                    if (!swipedItem) return;
-                    touchCurrentX = e.targetTouches[0].clientX;
-                    let diffX = touchCurrentX - touchStartX;
-                    if (diffX < -maxSwipe) diffX = -maxSwipe;
-                    if (diffX > 0) diffX = 0;
-                    swipedItem.style.transform = `translateX(${diffX}px)`;
-                });
+// -- Architektura a pořadí inicializace --
+// 1. App: Hlavní třída, která řídí celou aplikaci.
+// 2. StateManager: Spravuje stav aplikace (data) a ukládání do localStorage.
+// 3. UIManager: Stará se o vykreslování a aktualizaci DOM.
+// 4. PWA_Manager: Generuje ikony, manifest a registruje Service Worker.
+// 5. NotificationManager: Zpracovává oprávnění a posílání notifikací.
+// 6. EnhancedMobileFeatures: Zajišťuje haptickou odezvu.
+// 7. PullToRefreshManager: Implementuje funkci "potáhni pro obnovení".
+// 8. BackupManager: Řeší export, import a automatické zálohování dat.
+// 9. WakeLockManager: Udržuje obrazovku aktivní během měření.
+// 10. ChartManager: Vykresluje grafy na canvas.
+//
+// Inicializace probíhá v `App.init()`:
+// - Vytvoří instance všech manažerů.
+// - Vygeneruje PWA assety.
+// - Načte stav.
+// - Inicializuje komponenty a posluchače událostí.
+// - Vykreslí počáteční pohled.
 
-                entryList.addEventListener('touchend', () => {
-                    if (!swipedItem) return;
-                    swipedItem.style.transition = 'transform 0.3s ease-out';
-                    const diffX = touchCurrentX - touchStartX;
-                    if (diffX < -swipeThreshold) {
-                        swipedItem.style.transform = `translateX(-${maxSwipe}px)`;
-                        swipedItem.classList.add('swiped');
-                        enhancedMobileFeatures.haptic('medium'); // Haptic na swipe
-                    } else {
-                        swipedItem.style.transform = 'translateX(0)';
-                        swipedItem.classList.remove('swiped');
-                    }
-                    swipedItem = null;
-                });
-            }
+const DB_KEY = 'worktime_state_v2';
+const AUTO_BACKUP_KEY = 'worktime_auto_backup';
 
-            // --- HANDLERS ---
-            function handleUserSwitch(e) {
-                if (!e.target.matches('.user-btn')) return;
-                enhancedMobileFeatures.haptic('medium');
-                const previousUser = state.currentUser;
-                const newUser = e.target.dataset.user;
-                if (previousUser === newUser) return;
-                if (state.timers[previousUser]?.intervalId) {
-                    clearInterval(state.timers[previousUser].intervalId);
-                    state.timers[previousUser].intervalId = null;
-                }
-                state.currentUser = newUser;
-                updateUserSwitcherUI();
-                updateUI();
-                updateTimerUIForCurrentUser();
-                saveState();
-            }
+/**
+ * @class StateManager
+ * @description Spravuje veškerý stav aplikace, včetně načítání a ukládání.
+ */
+class StateManager {
+constructor() {
+this.state = null;
+this.saveStateThrottled = this.throttle(this.saveState.bind(this), 250);
+}
 
-            function toggleTheme() {
-                enhancedMobileFeatures.haptic('light');
-                state.settings.theme = state.settings.theme === 'dark' ? 'light' : 'dark';
-                document.body.classList.toggle('light-mode', state.settings.theme === 'light');
-                themeSwitcher.innerHTML = state.settings.theme === 'dark' ? sunIcon : moonIcon;
-                saveState();
-            }
+getDefaultState() {
+return {
+users: [],
+activeUserId: null,
+timers: {},
+entries: [],
+settings: {
+theme: 'auto',
+currency: 'CZK',
+haptics: true,
+notifications: true,
+},
+lastBackupDateISO: null,
+schemaVersion: 2,
+};
+}
 
-            function handleViewSwitch(e) {
-                if (!e.target.matches('.ios-segment')) return;
-                enhancedMobileFeatures.haptic('light');
-                document.querySelectorAll('.ios-segment').forEach(btn => btn.classList.remove('active'));
-                e.target.classList.add('active');
-                state.currentView = e.target.dataset.view;
-                updateIosViewSwitcherUI();
-                updateUI();
-            }
+// Schéma pro validaci
+EntrySchema = {
+id: 'string',
+userId: 'string',
+taskName: 'string',
+category: 'string_or_null',
+startAt: 'number',
+endAt: 'number',
+durationMs: 'number',
+rateAtTime: 'number',
+createdAt: 'number',
+updatedAt: 'number',
+history: 'array'
+};
 
-            function handleTimerControls(e) {
-                const action = e.target.dataset.action;
-                if (!action) return;
-                enhancedMobileFeatures.haptic('medium');
-                switch (action) {
-                    case 'start': startTimer(); break;
-                    case 'pause': pauseTimer(); break;
-                    case 'resume': resumeTimer(); break;
-                    case 'stop': stopTimer(); break;
-                }
-            }
+validate(data, schema) {
+if (typeof data !== 'object' || data === null) return false;
+for (const key in schema) {
+const type = schema[key];
+if (type.includes('_or_null') && (data[key] === null || data[key] === undefined)) continue;
+if (typeof data[key] !== type.replace('_or_null', '')) return false;
+}
+return true;
+}
 
-            /* --- Nový handler pro FAB --- */
-            function handleFabClick() {
-                enhancedMobileFeatures.haptic('heavy');
-                const timer = state.timers[state.currentUser];
-                if (timer.startTime && !timer.isPaused) {
-                    stopTimer();
-                } else {
-                    startTimer();
-                }
-                updateFabUI();
-            }
+loadState() {
+try {
+const storedState = localStorage.getItem(DB_KEY);
+if (storedState) {
+this.state = JSON.parse(storedState);
+// Migrace schématu
+if (this.state.schemaVersion < 2) {
+this.state.entries.forEach(e => { e.history = []; });
+this.state.schemaVersion = 2;
+}
+} else {
+this.state = this.getDefaultState();
+this.createDefaultUser();
+}
+} catch (error) {
+console.error("Chyba při načítání stavu:", error);
+this.state = this.getDefaultState();
+this.createDefaultUser();
+}
+return this.state;
+}
 
-            function handleManualSubmit(e) {
-                e.preventDefault();
-                enhancedMobileFeatures.haptic('medium');
-                const dateInput = document.getElementById('manual-date');
-                const durationInput = document.getElementById('manual-duration');
-                const durationMs = parseDurationInput(durationInput.value);
-                if (isNaN(durationMs) || durationMs <= 0) {
-                    alert('Zadejte platnou kladnou dobu. Povolené formáty: "2:30", "90m", "1.5h".');
-                    return;
-                }
-                const entryDate = new Date(dateInput.value);
-                if (isNaN(entryDate.getTime())) {
-                    alert('Zadejte platné datum.');
-                    return;
-                }
-                const end = new Date(entryDate.setHours(23, 59, 59, 999)).getTime();
-                const start = end - durationMs;
-                addEntry(start, end);
-                manualEntryModal.classList.remove('visible');
-                updateUI();
-            }
+saveState() {
+try {
+localStorage.setItem(DB_KEY, JSON.stringify(this.state));
+} catch (error) {
+console.error("Chyba při ukládání stavu:", error);
+}
+}
 
-            function parseDurationInput(input) {
-                input = input.trim().toLowerCase();
-                if (input.includes(':')) {
-                    const [hours, minutes] = input.split(':').map(Number);
-                    return (hours * 3600000) + (minutes * 60000);
-                } else if (input.endsWith('m')) {
-                    return parseFloat(input.slice(0, -1)) * 60000;
-                } else if (input.endsWith('h')) {
-                    return parseFloat(input.slice(0, -1)) * 3600000;
-                }
-                return NaN;
-            }
+createDefaultUser() {
+const newUser = {
+id: this.generateId(),
+name: 'Marty',
+rate: 400,
+color: '#39D353',
+icon: 'M',
+active: true
+};
+this.state.users.push(newUser);
+this.state.activeUserId = newUser.id;
+this.saveStateThrottled();
+}
 
-            function handleEditSubmit(e) {
-                e.preventDefault();
-                enhancedMobileFeatures.haptic('medium');
-                const id = document.getElementById('edit-entry-id').value;
-                const date = document.getElementById('edit-date').value;
-                const startTime = document.getElementById('edit-start-time').value;
-                const endTime = document.getElementById('edit-end-time').value;
-                const newStartTs = new Date(`${date}T${startTime}:00`).getTime();
-                const newEndTs = new Date(`${date}T${endTime}:00`).getTime();
-                if (newEndTs <= newStartTs) {
-                    alert('Konec musí být po začátku.');
-                    return;
-                }
-                const entryIndex = state.entries.findIndex(entry => entry.id === id);
-                if (entryIndex > -1) {
-                    const updatedEntry = {
-                        ...state.entries[entryIndex],
-                        startTime: newStartTs,
-                        endTime: newEndTs,
-                        duration: newEndTs - newStartTs
-                    };
-                    try {
-                        EntrySchema.validate(updatedEntry);
-                        state.entries[entryIndex] = updatedEntry;
-                        saveState();
-                        updateUI();
-                        editEntryModal.classList.remove('visible');
-                    } catch (error) {
-                        alert(`Chyba: ${error.message}`);
-                    }
-                }
-            }
+getState() { return this.state; }
+setState(newState, shouldSave = true) {
+this.state = { ...this.state, ...newState };
+if (shouldSave) {
+this.saveStateThrottled();
+}
+}
 
-            function handleEntryActions(e) {
-                const button = e.target.closest('.entry-action-btn');
-                if (!button) return;
-                enhancedMobileFeatures.haptic('medium');
-                const entryId = button.dataset.id;
-                const action = button.dataset.action;
-                const item = button.closest('.entry-item-wrapper').querySelector('.entry-item');
-                if (action === 'delete') {
-                    showConfirmDeleteModal().then(confirmed => {
-                        if (confirmed) {
-                            state.entries = state.entries.filter(entry => entry.id !== entryId);
-                            saveState();
-                            updateUI();
-                        }
-                        item.style.transform = 'translateX(0)';
-                        item.classList.remove('swiped');
-                    });
-                } else if (action === 'edit') {
-                    openEditModal(entryId);
-                    item.style.transform = 'translateX(0)';
-                    item.classList.remove('swiped');
-                }
-            }
+getActiveUser() {
+return this.state.users.find(u => u.id === this.state.activeUserId);
+}
 
-            // --- MODAL HANDLERS ---
-            function openSettingsModal() {
-                enhancedMobileFeatures.haptic('light');
-                document.getElementById('rate-marty').value = state.settings.userRates['Marty'] || 250;
-                document.getElementById('rate-cenda').value = state.settings.userRates['Čenda'] || 250;
-                document.getElementById('rate-kuba').value = state.settings.userRates['Kuba'] || 250;
-                settingsModal.classList.add('visible');
-            }
+getTimerForUser(userId) {
+if (!this.state.timers[userId]) {
+this.state.timers[userId] = { running: false, startAt: null, pausedAccumMs: 0, currentTaskName: '' };
+}
+return this.state.timers[userId];
+}
 
-            function saveSettings() {
-                enhancedMobileFeatures.haptic('medium');
-                state.settings.userRates['Marty'] = parseInt(document.getElementById('rate-marty').value) || 250;
-                state.settings.userRates['Čenda'] = parseInt(document.getElementById('rate-cenda').value) || 250;
-                state.settings.userRates['Kuba'] = parseInt(document.getElementById('rate-kuba').value) || 250;
-                saveState();
-                updateUI();
-                settingsModal.classList.remove('visible');
-            }
+addEntry(entryData) {
+const newEntry = {
+id: this.generateId(),
+category: null,
+createdAt: Date.now(),
+updatedAt: Date.now(),
+history: [],
+...entryData
+};
+if (!this.validate(newEntry, this.EntrySchema)) {
+console.error("Nevalidní záznam:", newEntry);
+return;
+}
+this.state.entries.push(newEntry);
+this.saveStateThrottled();
+}
 
-            function openManualEntryModal() {
-                enhancedMobileFeatures.haptic('light');
-                document.getElementById('manual-date').value = new Date().toISOString().split('T')[0];
-                document.getElementById('manual-duration').value = '';
-                manualEntryModal.classList.add('visible');
-            }
+updateEntry(entryId, updates) {
+const entryIndex = this.state.entries.findIndex(e => e.id === entryId);
+if (entryIndex === -1) return;
 
-            function openEditModal(entryId) {
-                enhancedMobileFeatures.haptic('light');
-                const entry = state.entries.find(e => e.id === entryId);
-                if (!entry) return;
-                const date = new Date(entry.startTime).toISOString().split('T')[0];
-                const startTime = new Date(entry.startTime).toLocaleTimeString('cs-CZ', {hour: '2-digit', minute: '2-digit'});
-                const endTime = new Date(entry.endTime).toLocaleTimeString('cs-CZ', {hour: '2-digit', minute: '2-digit'});
-                document.getElementById('edit-entry-id').value = entryId;
-                document.getElementById('edit-date').value = date;
-                document.getElementById('edit-start-time').value = startTime;
-                document.getElementById('edit-end-time').value = endTime;
-                editEntryModal.classList.add('visible');
-            }
+const originalEntry = { ...this.state.entries[entryIndex] };
+const updatedEntry = { ...originalEntry, ...updates, updatedAt: Date.now() };
 
-            function showConfirmDeleteModal() {
-                confirmDeleteModal.classList.add('visible');
-                return new Promise(resolve => {
-                    deleteResolver = resolve;
-                });
-            }
+const changes = {};
+for (const key in updates) {
+if (originalEntry[key] !== updatedEntry[key]) {
+changes[key] = { from: originalEntry[key], to: updatedEntry[key] };
+}
+}
 
-            // --- TIMER LOGIC ---
-            function startTimer() {
-                const timer = state.timers[state.currentUser];
-                let startTime = Date.now();
-                const retroInput = timerControls.querySelector('.retro-start-input');
-                if (retroInput && retroInput.value) {
-                    const [hours, minutes] = retroInput.value.split(':').map(Number);
-                    const retroDate = new Date();
-                    retroDate.setHours(hours, minutes, 0, 0);
-                    if (retroDate > new Date()) retroDate.setDate(retroDate.getDate() - 1);
-                    startTime = retroDate.getTime();
-                }
-                timer.startTime = startTime;
-                timer.isPaused = false;
-                timer.totalPausedDuration = 0;
-                timer.pauseStartTime = null;
-                timer.intervalId = setInterval(updateTimerDisplay, 1000);
-                enhancedMobileFeatures.toggleWakeLock(true);
-                notificationManager.startBreakReminder(); // Spustit připomínky
-                saveState();
-                updateTimerUIForCurrentUser();
-                updateFabUI();
-            }
+if (Object.keys(changes).length > 0) {
+updatedEntry.history.push({ ts: Date.now(), changes });
+}
 
-            function pauseTimer() {
-                const timer = state.timers[state.currentUser];
-                if (!timer.intervalId) return;
-                clearInterval(timer.intervalId);
-                timer.intervalId = null;
-                timer.isPaused = true;
-                timer.pauseStartTime = Date.now();
-                enhancedMobileFeatures.toggleWakeLock(false);
-                notificationManager.stopBreakReminder();
-                updateTimerUIForCurrentUser();
-                saveState();
-            }
+this.state.entries[entryIndex] = updatedEntry;
+this.saveStateThrottled();
+}
 
-            function resumeTimer() {
-                const timer = state.timers[state.currentUser];
-                if (!timer.isPaused || !timer.startTime) return;
-                timer.totalPausedDuration += Date.now() - timer.pauseStartTime;
-                timer.isPaused = false;
-                timer.pauseStartTime = null;
-                timer.intervalId = setInterval(updateTimerDisplay, 1000);
-                enhancedMobileFeatures.toggleWakeLock(true);
-                notificationManager.startBreakReminder();
-                updateTimerUIForCurrentUser();
-                saveState();
-            }
+deleteEntry(entryId) {
+const entry = this.state.entries.find(e => e.id === entryId);
+if (!entry) return null;
 
-            function stopTimer() {
-                const timer = state.timers[state.currentUser];
-                if (!timer.startTime) return;
-                clearInterval(timer.intervalId);
-                timer.intervalId = null;
-                const endTime = Date.now();
-                if (timer.isPaused) {
-                    timer.totalPausedDuration += endTime - timer.pauseStartTime;
-                }
-                const duration = endTime - timer.startTime - timer.totalPausedDuration;
-                addEntry(timer.startTime, endTime, duration);
-                // Notifikace při stop
-                const rate = getCurrentUserRate();
-                const earnings = (duration / 3600000) * rate;
-                notificationManager.showNotification('Práce ukončena', { body: `Odpracováno: ${formatDuration(duration)}, Výdělek: ${earnings.toFixed(2)} Kč` });
-                resetTimer(timer);
-                enhancedMobileFeatures.toggleWakeLock(false);
-                notificationManager.stopBreakReminder();
-                updateTimerUIForCurrentUser();
-                updateUI();
-                updateFabUI();
-            }
+this.state.entries = this.state.entries.filter(e => e.id !== entryId);
+this.saveStateThrottled();
+return entry;
+}
 
-            function resetTimer(timer) {
-                timer.startTime = null;
-                timer.isPaused = false;
-                timer.totalPausedDuration = 0;
-                timer.pauseStartTime = null;
-                saveState();
-            }
+reAddEntry(entry) {
+this.state.entries.push(entry);
+// Není potřeba sort, ale v reálné app ano
+this.saveStateThrottled();
+}
 
-            function updateTimerDisplay() {
-                const timer = state.timers[state.currentUser];
-                if (!timer.startTime) return;
-                const now = Date.now();
-                const pausedDuration = timer.isPaused ? (timer.totalPausedDuration + (now - timer.pauseStartTime)) : timer.totalPausedDuration;
-                const elapsed = now - timer.startTime - pausedDuration;
-                timerDisplay.textContent = formatDuration(elapsed);
-                const rate = getCurrentUserRate();
-                const earnings = (elapsed / 3600000) * rate;
-                liveEarningsEl.textContent = `${earnings.toFixed(2)} Kč`;
-            }
+generateId() {
+return Date.now().toString(36) + Math.random().toString(36).substring(2);
+}
 
-            function formatDuration(ms) {
-                const seconds = Math.floor((ms / 1000) % 60);
-                const minutes = Math.floor((ms / 60000) % 60);
-                const hours = Math.floor(ms / 3600000);
-                return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-            }
+throttle(func, limit) {
+let inThrottle;
+return function() {
+const args = arguments;
+const context = this;
+if (!inThrottle) {
+func.apply(context, args);
+inThrottle = true;
+setTimeout(() => inThrottle = false, limit);
+}
+}
+}
+}
 
-            // --- ENTRY LOGIC ---
-            function addEntry(start, end, duration = end - start) {
-                const entry = {
-                    id: crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(),
-                    user: state.currentUser,
-                    startTime: start,
-                    endTime: end,
-                    duration: duration
-                };
-                try {
-                    EntrySchema.validate(entry);
-                    state.entries.push(entry);
-                    saveState();
-                } catch (error) {
-                    alert(`Chyba při přidávání: ${error.message}`);
-                }
-            }
+/**
+ * @class PWA_Manager
+ * @description Stará se o generování PWA assetů a registraci Service Workeru.
+ */
+class PWA_Manager {
+constructor() {
+this.accentColor = '#39D353';
+this.bgColor = '#0D1117';
+}
 
-            // --- UI UPDATES ---
-            function updateUI() {
-                updateGreeting();
-                updateUserSwitcherUI();
-                updateEntriesList();
-                updateSummary();
-                updateTimerDisplay();
-                updateFabUI(); // Nové
-            }
+async init() {
+this.generateIcons();
+this.generateManifest();
+this.registerServiceWorker();
+}
 
-            function updateGreeting() {
-                const hour = new Date().getHours();
-                let greeting = hour < 12 ? 'Dobré ráno' : hour < 18 ? 'Dobrý den' : 'Dobrý večer';
-                greetingEl.textContent = `${greeting}, ${state.currentUser}!`;
-            }
+generateIcons() {
+const canvas = document.createElement('canvas');
+const ctx = canvas.getContext('2d');
+const size = 180;
+canvas.width = size;
+canvas.height = size;
 
-            function updateUserSwitcherUI() {
-                const activeBtn = userSwitcher.querySelector(`[data-user="${state.currentUser}"]`);
-                if (activeBtn) {
-                    activeBtn.classList.add('active');
-                    const index = USERS.indexOf(state.currentUser);
-                    const btnWidth = activeBtn.offsetWidth;
-                    userSwitcherIndicator.style.width = `${btnWidth}px`;
-                    userSwitcherIndicator.style.transform = `translateX(${index * btnWidth}px)`;
-                }
-                userSwitcher.querySelectorAll('.user-btn').forEach(btn => {
-                    if (btn.dataset.user !== state.currentUser) btn.classList.remove('active');
-                });
-            }
+// Pozadí
+ctx.fillStyle = this.bgColor;
+ctx.fillRect(0, 0, size, size);
 
-            /* --- Nová funkce pro aktualizaci iOS segmented control --- */
-            function updateIosViewSwitcherUI() {
-                const activeBtn = iosViewSwitcher.querySelector(`[data-view="${state.currentView}"]`);
-                if (activeBtn) {
-                    const index = Array.from(iosViewSwitcher.querySelectorAll('.ios-segment')).indexOf(activeBtn);
-                    const btnWidth = activeBtn.offsetWidth;
-                    iosSegmentIndicator.style.width = `${btnWidth}px`;
-                    iosSegmentIndicator.style.transform = `translateX(${index * btnWidth}px)`;
-                }
-            }
+// Ciferník
+ctx.strokeStyle = '#FFFFFF';
+ctx.lineWidth = 10;
+ctx.beginPath();
+ctx.arc(size / 2, size / 2, size * 0.4, 0, 2 * Math.PI);
+ctx.stroke();
 
-            function updateTimerUIForCurrentUser() {
-                const timer = state.timers[state.currentUser];
-                timerControls.innerHTML = '';
-                if (timer.startTime) {
-                    if (timer.isPaused) {
-                        timerDisplay.classList.add('paused');
-                        timerDisplay.classList.remove('running');
-                        timerControls.innerHTML = `
-                            <button class="timer-btn pause-btn ios-button" data-action="resume">Pokračovat</button>
-                            <button class="timer-btn stop-btn ios-button" data-action="stop">Ukončit</button>
-                        `;
-                    } else {
-                        timerDisplay.classList.add('running');
-                        timerDisplay.classList.remove('paused');
-                        timerControls.innerHTML = `
-                            <button class="timer-btn pause-btn ios-button" data-action="pause">Pozastavit</button>
-                            <button class="timer-btn stop-btn ios-button" data-action="stop">Ukončit</button>
-                        `;
-                    }
-                    liveEarningsEl.style.opacity = 1;
-                } else {
-                    timerDisplay.classList.remove('running', 'paused');
-                    timerControls.innerHTML = `
-                        <button class="timer-btn start-btn ios-button" data-action="start">Spustit</button>
-                        <input type="time" class="retro-start-input" placeholder="Retro start">
-                    `;
-                    liveEarningsEl.style.opacity = 0;
-                }
-                updateTimerDisplay();
-            }
+// Střed
+ctx.fillStyle = '#FFFFFF';
+ctx.beginPath();
+ctx.arc(size / 2, size / 2, 8, 0, 2 * Math.PI);
+ctx.fill();
 
-            /* --- Nová funkce pro aktualizaci FAB --- */
-            function updateFabUI() {
-                const timer = state.timers[state.currentUser];
-                fabBtn.textContent = timer.startTime && !timer.isPaused ? '■' : '+'; // Symbol pro stop/start
-                fabBtn.style.backgroundImage = timer.startTime && !timer.isPaused ? 'linear-gradient(45deg, var(--danger-dark), var(--warning-dark))' : 'linear-gradient(45deg, var(--accent-dark), var(--primary-dark))';
-            }
+// Ručičky
+ctx.strokeStyle = '#FFFFFF';
+ctx.lineWidth = 8;
+ctx.beginPath();
+ctx.moveTo(size / 2, size / 2);
+ctx.lineTo(size / 2, size * 0.25);
+ctx.stroke();
 
-            function updateSummary() {
-                const { totalTime, totalEarnings } = calculateSummary();
-                summaryTime.textContent = formatSummaryTime(totalTime);
-                summaryEarnings.textContent = `${totalEarnings.toFixed(0)} Kč`;
-            }
+ctx.strokeStyle = this.accentColor;
+ctx.lineWidth = 8;
+ctx.beginPath();
+ctx.moveTo(size / 2, size / 2);
+ctx.lineTo(size * 0.7, size / 2);
+ctx.stroke();
 
-            function calculateSummary() {
-                const now = new Date();
-                let startDate;
-                switch (state.currentView) {
-                    case 'day': startDate = new Date(now.setHours(0, 0, 0, 0)); break;
-                    case 'week': startDate = new Date(now.setDate(now.getDate() - now.getDay() + 1)); startDate.setHours(0, 0, 0, 0); break;
-                    case 'month': startDate = new Date(now.getFullYear(), now.getMonth(), 1); break;
-                }
-                const filteredEntries = state.entries.filter(e => e.user === state.currentUser && e.startTime >= startDate.getTime());
-                const totalTime = filteredEntries.reduce((sum, e) => sum + e.duration, 0);
-                const rate = getCurrentUserRate();
-                const totalEarnings = (totalTime / 3600000) * rate;
-                return { totalTime, totalEarnings };
-            }
+const pngUrl = canvas.toDataURL('image/png');
+this.addLink('apple-touch-icon', pngUrl);
 
-            function formatSummaryTime(ms) {
-                const hours = Math.floor(ms / 3600000);
-                const minutes = Math.floor((ms % 3600000) / 60000);
-                return `${hours}h ${minutes}m`;
-            }
+// Favicon (menší verze)
+const favCanvas = document.createElement('canvas');
+const favCtx = favCanvas.getContext('2d');
+const favSize = 32;
+favCanvas.width = favSize;
+favCanvas.height = favSize;
+favCtx.drawImage(canvas, 0, 0, favSize, favSize);
+const favUrl = favCanvas.toDataURL('image/x-icon');
+this.addLink('icon', favUrl, 'image/x-icon');
+}
 
-            function updateEntriesList() {
-                const filteredEntries = state.entries
-                    .filter(e => e.user === state.currentUser)
-                    .sort((a, b) => b.startTime - a.startTime);
+generateManifest() {
+const manifest = {
+name: 'WorkTime Tracker',
+short_name: 'WorkTime',
+start_url: '.',
+display: 'standalone',
+background_color: this.bgColor,
+theme_color: this.bgColor,
+description: 'Jednoduchý a efektivní sledovač pracovní doby.',
+icons: [{
+src: document.querySelector('link[rel="apple-touch-icon"]').href,
+sizes: '180x180',
+type: 'image/png'
+}]
+};
+const manifestBlob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
+const manifestUrl = URL.createObjectURL(manifestBlob);
+this.addLink('manifest', manifestUrl);
+}
 
-                entryList.innerHTML = '';
-                if (filteredEntries.length === 0) {
-                    entryList.innerHTML = '<p class="no-entries">Žádné záznamy pro tento pohled.</p>';
-                    return;
-                }
+registerServiceWorker() {
+if ('serviceWorker' in navigator) {
+const swContent = `
+const CACHE_NAME = 'worktime-cache-v1';
+const urlsToCache = [
+'/',
+'/index.html' // V single-file app je toto klíčové
+];
+self.addEventListener('install', event => {
+event.waitUntil(
+caches.open(CACHE_NAME).then(cache => cache.addAll(urlsToCache))
+);
+});
+self.addEventListener('fetch', event => {
+event.respondWith(
+caches.open(CACHE_NAME).then(cache => {
+return cache.match(event.request).then(response => {
+const fetchPromise = fetch(event.request).then(networkResponse => {
+if (event.request.method === 'GET') {
+cache.put(event.request, networkResponse.clone());
+}
+return networkResponse;
+});
+return response || fetchPromise;
+});
+})
+);
+});
+`;
+const swBlob = new Blob([swContent], { type: 'application/javascript' });
+const swUrl = URL.createObjectURL(swBlob);
 
-                filteredEntries.forEach((entry, index) => {
-                    const itemWrapper = document.createElement('li');
-                    itemWrapper.classList.add('entry-item-wrapper');
-                    itemWrapper.innerHTML = `
-                        <div class="entry-item-actions">
-                            <button class="entry-action-btn edit" data-action="edit" data-id="${entry.id}">${editIcon}</button>
-                            <button class="entry-action-btn delete" data-action="delete" data-id="${entry.id}">${deleteIcon}</button>
-                        </div>
-                        <div class="entry-item" style="animation-delay: ${index * 50}ms">
-                            <div class="entry-details">
-                                <p class="entry-date">${new Date(entry.startTime).toLocaleDateString('cs-CZ', {weekday: 'short', day: 'numeric', month: 'short'})}</p>
-                                <p class="entry-time">${new Date(entry.startTime).toLocaleTimeString('cs-CZ', {hour: '2-digit', minute: '2-digit'})} - ${new Date(entry.endTime).toLocaleTimeString('cs-CZ', {hour: '2-digit', minute: '2-digit'})}</p>
-                            </div>
-                            <span class="entry-duration">${formatDuration(entry.duration)}</span>
-                        </div>
-                    `;
-                    entryList.appendChild(itemWrapper);
-                });
-            }
+navigator.serviceWorker.register(swUrl)
+.then(reg => console.log('Service Worker registered.', reg))
+.catch(err => console.error('Service Worker registration failed:', err));
+}
+}
 
-            settingsBtn.innerHTML = settingsIcon;
+addLink(rel, href, type = null) {
+const link = document.createElement('link');
+link.rel = rel;
+link.href = href;
+if (type) link.type = type;
+document.head.appendChild(link);
+}
+}
 
-            init();
-        });
-    </script>
+/**
+ * @class NotificationManager
+ * @description Spravuje oprávnění a posílání notifikací.
+ */
+class NotificationManager {
+constructor() {
+this.permission = 'default';
+}
+
+async init() {
+if (!('Notification' in window)) {
+console.warn('This browser does not support desktop notification');
+return;
+}
+this.permission = Notification.permission;
+}
+
+async requestPermission() {
+if (this.permission === 'default') {
+this.permission = await Notification.requestPermission();
+}
+return this.permission === 'granted';
+}
+
+notify(title, body, options = {}) {
+if (this.permission !== 'granted') {
+console.log('Notification permission not granted.');
+return;
+}
+const finalOptions = {
+body,
+icon: document.querySelector('link[rel="apple-touch-icon"]').href,
+...options
+};
+new Notification(title, finalOptions);
+}
+}
+
+/**
+ * @class EnhancedMobileFeatures
+ * @description Poskytuje haptickou odezvu.
+ */
+class EnhancedMobileFeatures {
+vibrate(type = 'light') {
+if ('vibrate' in navigator) {
+let pattern;
+switch (type) {
+case 'light': pattern = [50]; break;
+case 'medium': pattern = [100]; break;
+case 'heavy': pattern = [200]; break;
+case 'success': pattern = [50, 50, 100]; break;
+case 'error': pattern = [100, 50, 100]; break;
+default: pattern = [50];
+}
+try {
+navigator.vibrate(pattern);
+} catch (e) {
+// iOS může vyhodit chybu, pokud je voláno příliš často
+}
+}
+}
+}
+
+/**
+ * @class PullToRefreshManager
+ * @description Implementuje "potáhni pro obnovení".
+ */
+class PullToRefreshManager {
+constructor(element, onRefresh) {
+this.element = element;
+this.onRefresh = onRefresh;
+this.indicator = document.getElementById('pull-to-refresh-indicator');
+this.touchStartY = 0;
+this.isRefreshing = false;
+this.threshold = 80;
+this.init();
+}
+
+init() {
+this.element.addEventListener('touchstart', this.handleTouchStart.bind(this), { passive: true });
+this.element.addEventListener('touchmove', this.handleTouchMove.bind(this), { passive: false });
+this.element.addEventListener('touchend', this.handleTouchEnd.bind(this), { passive: true });
+}
+
+handleTouchStart(e) {
+if (this.element.scrollTop === 0 && !this.isRefreshing) {
+this.touchStartY = e.touches[0].clientY;
+}
+}
+
+handleTouchMove(e) {
+if (this.element.scrollTop === 0 && this.touchStartY > 0 && !this.isRefreshing) {
+const currentY = e.touches[0].clientY;
+const diff = currentY - this.touchStartY;
+
+if (diff > 0) {
+e.preventDefault();
+this.indicator.style.opacity = Math.min(1, diff / this.threshold);
+this.element.style.transform = `translateY(${Math.min(diff, this.threshold * 1.5)}px)`;
+if (diff > this.threshold) {
+this.indicator.classList.add('ready');
+} else {
+this.indicator.classList.remove('ready');
+}
+}
+}
+}
+
+handleTouchEnd() {
+if (this.isRefreshing || this.touchStartY === 0) return;
+
+const currentY = parseFloat(this.element.style.transform.replace('translateY(', ''));
+this.element.style.transition = 'transform 0.3s ease';
+this.element.style.transform = 'translateY(0)';
+
+if (currentY > this.threshold) {
+this.isRefreshing = true;
+this.indicator.classList.add('refreshing');
+this.indicator.classList.remove('ready');
+this.indicator.style.opacity = '1';
+
+setTimeout(() => {
+this.onRefresh().then(() => {
+this.reset();
+});
+}, 1000); // Úmyslná prodleva
+} else {
+this.indicator.style.opacity = '0';
+}
+
+this.touchStartY = 0;
+setTimeout(() => {
+this.element.style.transition = '';
+}, 300);
+}
+
+reset() {
+this.isRefreshing = false;
+this.indicator.classList.remove('refreshing');
+this.indicator.style.opacity = '0';
+}
+}
+
+/**
+ * @class BackupManager
+ * @description Řeší export, import a automatické zálohování.
+ */
+class BackupManager {
+constructor(stateManager) {
+this.stateManager = stateManager;
+}
+
+autoBackup() {
+const today = new Date().toISOString().split('T')[0];
+const lastBackup = this.stateManager.getState().lastBackupDateISO;
+
+if (today !== lastBackup) {
+console.log('Provádění denní automatické zálohy...');
+const stateToBackup = this.stateManager.getState();
+localStorage.setItem(AUTO_BACKUP_KEY, JSON.stringify(stateToBackup));
+this.stateManager.setState({ lastBackupDateISO: today });
+}
+}
+
+exportToJSON() {
+const data = JSON.stringify(this.stateManager.getState(), null, 2);
+const blob = new Blob([data], { type: 'application/json' });
+const url = URL.createObjectURL(blob);
+const a = document.createElement('a');
+const date = new Date().toISOString().split('T')[0];
+a.href = url;
+a.download = `worktime-backup-${date}.json`;
+document.body.appendChild(a);
+a.click();
+document.body.removeChild(a);
+URL.revokeObjectURL(url);
+}
+
+importFromJSON(file) {
+return new Promise((resolve, reject) => {
+const reader = new FileReader();
+reader.onload = (e) => {
+try {
+const importedState = JSON.parse(e.target.result);
+// Validace
+if (importedState.users && importedState.entries) {
+// Merge místo replace
+const currentState = this.stateManager.getState();
+importedState.entries.forEach(impEntry => {
+if (!currentState.entries.some(e => e.id === impEntry.id)) {
+currentState.entries.push(impEntry);
+}
+});
+importedState.users.forEach(impUser => {
+if (!currentState.users.some(u => u.id === impUser.id)) {
+currentState.users.push(impUser);
+}
+});
+this.stateManager.state = { ...currentState, ...importedState };
+this.stateManager.saveState();
+resolve();
+} else {
+reject(new Error('Neplatný formát souboru.'));
+}
+} catch (err) {
+reject(new Error('Chyba při parsování souboru.'));
+}
+};
+reader.onerror = () => reject(new Error('Chyba při čtení souboru.'));
+reader.readAsText(file);
+});
+}
+}
+
+/**
+ * @class WakeLockManager
+ * @description Udržuje obrazovku aktivní.
+ */
+class WakeLockManager {
+constructor() {
+this.wakeLock = null;
+document.addEventListener('visibilitychange', this.handleVisibilityChange.bind(this));
+}
+
+async request() {
+if ('wakeLock' in navigator) {
+try {
+this.wakeLock = await navigator.wakeLock.request('screen');
+this.wakeLock.addEventListener('release', () => {
+console.log('Wake Lock byl uvolněn.');
+});
+console.log('Wake Lock je aktivní.');
+} catch (err) {
+console.error(`${err.name}, ${err.message}`);
+}
+}
+}
+
+async release() {
+if (this.wakeLock !== null) {
+await this.wakeLock.release();
+this.wakeLock = null;
+}
+}
+
+handleVisibilityChange() {
+if (this.wakeLock !== null && document.visibilityState === 'visible') {
+this.request();
+}
+}
+}
+
+/**
+ * @class ChartManager
+ * @description Vykresluje grafy pomocí Canvas API.
+ */
+class ChartManager {
+constructor(stateManager) {
+this.stateManager = stateManager;
+this.timeChartCtx = document.getElementById('time-chart').getContext('2d');
+this.earningsChartCtx = document.getElementById('earnings-chart').getContext('2d');
+this.heatmapCtx = document.getElementById('heatmap-chart').getContext('2d');
+}
+
+renderAllCharts() {
+this.renderTimeChart();
+this.renderEarningsChart(); // Dokončeno jako TODO v fázi 1
+this.renderHeatmap();
+}
+
+renderTimeChart() {
+const ctx = this.timeChartCtx;
+const canvas = ctx.canvas;
+ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+const data = this.getWeeklyTimeData();
+const labels = Object.keys(data);
+const values = Object.values(data);
+const maxValue = Math.max(1, ...values);
+
+const barWidth = canvas.width / (labels.length * 2);
+const scale = (canvas.height - 20) / maxValue;
+
+ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--text').trim();
+ctx.font = '12px sans-serif';
+
+labels.forEach((label, i) => {
+const barHeight = values[i] * scale;
+const x = (i * 2 + 0.5) * barWidth;
+const y = canvas.height - barHeight - 15;
+
+ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
+ctx.fillRect(x, y, barWidth, barHeight);
+
+ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--text').trim();
+ctx.fillText(label, x + barWidth / 2 - 10, canvas.height - 5);
+});
+}
+
+renderEarningsChart() {
+// Fáze 1 vylepšení: Implementace koláčového grafu podle kategorií
+const ctx = this.earningsChartCtx;
+const canvas = ctx.canvas;
+ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+// TODO: Přidat data z kategorií a vykreslit pie chart
+ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--text').trim();
+ctx.font = '14px sans-serif';
+ctx.fillText('Připravuje se...', canvas.width / 2 - 50, canvas.height / 2);
+}
+
+renderHeatmap() {
+const ctx = this.heatmapCtx;
+const canvas = ctx.canvas;
+ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+const data = this.getHeatmapData(); // 7 dnů x 24 hodin
+const days = ['Ne', 'Po', 'Út', 'St', 'Čt', 'Pá', 'So'];
+const cellWidth = (canvas.width - 30) / 24;
+const cellHeight = (canvas.height - 30) / 7;
+
+const maxIntensity = Math.max(1, ...data.flat());
+
+for (let day = 0; day < 7; day++) {
+for (let hour = 0; hour < 24; hour++) {
+const intensity = data[day][hour] / maxIntensity;
+ctx.fillStyle = `rgba(57, 211, 83, ${intensity})`;
+ctx.fillRect(30 + hour * cellWidth, day * cellHeight, cellWidth -1, cellHeight -1);
+}
+}
+
+ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--text').trim();
+ctx.font = '10px sans-serif';
+days.forEach((day, i) => {
+ctx.fillText(day, 5, i * cellHeight + cellHeight / 2);
+});
+for (let hour = 0; hour < 24; hour += 3) {
+ctx.fillText(`${hour}`, 30 + hour * cellWidth, canvas.height - 5);
+}
+}
+
+getWeeklyTimeData() {
+const entries = this.stateManager.getState().entries;
+const user = this.stateManager.getActiveUser();
+if (!user) return {};
+
+const data = { 'Po': 0, 'Út': 0, 'St': 0, 'Čt': 0, 'Pá': 0, 'So': 0, 'Ne': 0 };
+const today = new Date();
+const startOfWeek = new Date(today);
+startOfWeek.setDate(today.getDate() - (today.getDay() + 6) % 7);
+startOfWeek.setHours(0,0,0,0);
+
+const endOfWeek = new Date(startOfWeek);
+endOfWeek.setDate(startOfWeek.getDate() + 7);
+
+entries
+.filter(e => e.userId === user.id && e.startAt >= startOfWeek.getTime() && e.startAt < endOfWeek.getTime())
+.forEach(e => {
+const dayIndex = (new Date(e.startAt).getDay() + 6) % 7; // Po = 0
+const dayKey = Object.keys(data)[dayIndex];
+data[dayKey] += e.durationMs / (1000 * 60 * 60); // v hodinách
+});
+return data;
+}
+
+getHeatmapData() {
+const entries = this.stateManager.getState().entries;
+const user = this.stateManager.getActiveUser();
+if (!user) return Array(7).fill(0).map(() => Array(24).fill(0));
+
+const data = Array(7).fill(0).map(() => Array(24).fill(0));
+
+entries
+.filter(e => e.userId === user.id)
+.forEach(e => {
+const start = new Date(e.startAt);
+const end = new Date(e.endAt);
+
+let current = new Date(start);
+while(current < end) {
+const day = current.getDay(); // Ne = 0
+const hour = current.getHours();
+data[day][hour] += 1;
+current.setHours(current.getHours() + 1);
+}
+});
+return data;
+}
+}
+
+/**
+ * @class UIManager
+ * @description Zpracovává veškeré vykreslování a interakce s DOM.
+ */
+class UIManager {
+constructor(app) {
+this.app = app;
+this.stateManager = app.stateManager;
+this.mobileFeatures = app.mobileFeatures;
+this.elements = {
+appContainer: document.getElementById('app-container'),
+userSwitcher: document.getElementById('user-switcher'),
+userAvatar: document.getElementById('user-avatar'),
+userName: document.getElementById('user-name'),
+summaryTime: document.getElementById('summary-time'),
+summaryEarnings: document.getElementById('summary-earnings'),
+navTabs: document.getElementById('nav-tabs'),
+navIndicator: document.getElementById('nav-indicator'),
+mainContent: document.querySelector('.main-content'),
+views: document.querySelectorAll('.app-view'),
+timerView: document.getElementById('timer-view'),
+timerTime: document.getElementById('timer-time'),
+timerEarnings: document.getElementById('timer-earnings'),
+timerTask: document.getElementById('timer-task'),
+timerControls: document.getElementById('timer-controls'),
+entriesView: document.getElementById('entries-view'),
+entriesList: document.getElementById('entries-list'),
+searchInput: document.getElementById('search-input'),
+statsView: document.getElementById('stats-view'),
+settingsView: document.getElementById('settings-view'),
+fab: document.getElementById('fab'),
+modalContainer: document.getElementById('modal-container'),
+toastContainer: document.getElementById('toast-container'),
+themeSelect: document.getElementById('theme-select'),
+currencySelect: document.getElementById('currency-select'),
+usersList: document.getElementById('users-list'),
+addUserBtn: document.getElementById('add-user-btn'),
+exportCsvBtn: document.getElementById('export-csv-btn'),
+backupBtn: document.getElementById('backup-btn'),
+demoDataBtn: document.getElementById('demo-data-btn'),
+clearDataBtn: document.getElementById('clear-data-btn'),
+diagInfo: document.getElementById('diag-info'),
+notificationsToggle: document.getElementById('notifications-toggle'),
+hapticsToggle: document.getElementById('haptics-toggle'),
+};
+this.activeView = 'timer-view';
+this.searchDebounced = this.debounce(this.renderEntries.bind(this), 300);
+}
+
+initEventListeners() {
+this.elements.navTabs.addEventListener('click', e => this.handleNavClick(e));
+this.elements.fab.addEventListener('click', () => this.handleFabClick());
+this.elements.themeSelect.addEventListener('change', e => this.handleThemeChange(e.target.value));
+this.elements.currencySelect.addEventListener('change', e => this.handleCurrencyChange(e.target.value));
+this.elements.addUserBtn.addEventListener('click', () => this.showUserModal());
+this.elements.searchInput.addEventListener('input', () => this.searchDebounced());
+this.elements.exportCsvBtn.addEventListener('click', () => this.app.exportCSV());
+this.elements.backupBtn.addEventListener('click', () => this.showBackupModal());
+this.elements.demoDataBtn.addEventListener('click', () => this.app.generateDemoData());
+this.elements.clearDataBtn.addEventListener('click', () => this.app.clearAllData());
+this.elements.notificationsToggle.addEventListener('change', e => this.handleNotificationsChange(e.target.value));
+this.elements.hapticsToggle.addEventListener('change', e => this.handleHapticsChange(e.target.value));
+
+window.addEventListener('keydown', e => this.handleKeyPress(e));
+}
+
+handleNotificationsChange(value) {
+const enabled = value === 'true';
+this.stateManager.setState({ settings: { ...this.stateManager.getState().settings, notifications: enabled } });
+if (enabled) this.app.notificationManager.requestPermission();
+}
+
+handleHapticsChange(value) {
+const enabled = value === 'true';
+this.stateManager.setState({ settings: { ...this.stateManager.getState().settings, haptics: enabled } });
+}
+
+handleKeyPress(e) {
+if (e.code === 'Space' && this.activeView === 'timer-view' && !(e.target instanceof HTMLInputElement)) {
+e.preventDefault();
+this.handleFabClick();
+}
+if ((e.metaKey || e.ctrlKey) && e.key === 'f') {
+e.preventDefault();
+this.switchView('entries-view');
+this.elements.searchInput.focus();
+}
+}
+
+updateFullUI() {
+this.updateHeader();
+this.updateTimerDisplay();
+this.updateFab();
+this.renderEntries();
+this.renderUsersList();
+this.applyTheme(this.stateManager.getState().settings.theme);
+this.elements.currencySelect.value = this.stateManager.getState().settings.currency;
+this.elements.notificationsToggle.value = this.stateManager.getState().settings.notifications ? 'true' : 'false';
+this.elements.hapticsToggle.value = this.stateManager.getState().settings.haptics ? 'true' : 'false';
+this.updateDiagnostics();
+if(this.activeView === 'stats-view') {
+this.app.chartManager.renderAllCharts();
+}
+}
+
+updateHeader() {
+const user = this.stateManager.getActiveUser();
+const state = this.stateManager.getState();
+if (!user) {
+this.elements.userName.textContent = 'Žádný uživatel';
+this.elements.userAvatar.style.backgroundColor = 'grey';
+this.elements.userAvatar.textContent = '?';
+return;
+}
+
+this.elements.userName.textContent = user.name;
+this.elements.userAvatar.style.backgroundColor = user.color;
+this.elements.userAvatar.textContent = user.icon;
+
+const todayEntries = state.entries.filter(e => {
+const entryDate = new Date(e.startAt);
+const today = new Date();
+return e.userId === user.id &&
+entryDate.getDate() === today.getDate() &&
+entryDate.getMonth() === today.getMonth() &&
+entryDate.getFullYear() === today.getFullYear();
+});
+
+const totalMsToday = todayEntries.reduce((sum, e) => sum + e.durationMs, 0);
+const totalEarningsToday = todayEntries.reduce((sum, e) => sum + (e.durationMs / 3600000) * e.rateAtTime, 0);
+
+this.elements.summaryTime.textContent = this.formatDuration(totalMsToday);
+this.elements.summaryEarnings.textContent = `${totalEarningsToday.toFixed(2)} ${state.settings.currency}`;
+}
+
+updateTimerDisplay() {
+const user = this.stateManager.getActiveUser();
+if (!user) return;
+const timer = this.stateManager.getTimerForUser(user.id);
+const state = this.stateManager.getState();
+
+let elapsedMs = timer.pausedAccumMs;
+if (timer.running && timer.startAt) {
+elapsedMs += Date.now() - timer.startAt;
+}
+
+this.elements.timerTime.textContent = this.formatDuration(elapsedMs);
+const earnings = (elapsedMs / 3600000) * user.rate;
+this.elements.timerEarnings.textContent = `${earnings.toFixed(2)} ${state.settings.currency}`;
+this.elements.timerTask.textContent = timer.currentTaskName || 'Žádný aktivní úkol';
+
+this.renderTimerControls(timer);
+}
+
+renderTimerControls(timer) {
+this.elements.timerControls.innerHTML = '';
+if (timer.running) {
+const pauseBtn = document.createElement('button');
+pauseBtn.className = 'ios-button';
+pauseBtn.textContent = 'Pauza';
+pauseBtn.onclick = () => this.app.pauseTimer();
+this.elements.timerControls.appendChild(pauseBtn);
+} else if (timer.pausedAccumMs > 0) {
+const resumeBtn = document.createElement('button');
+resumeBtn.className = 'ios-button primary';
+resumeBtn.textContent = 'Pokračovat';
+resumeBtn.onclick = () => this.app.resumeTimer();
+this.elements.timerControls.appendChild(resumeBtn);
+} else {
+const retroBtn = document.createElement('button');
+retroBtn.className = 'ios-button';
+retroBtn.textContent = 'Spustit zpětně';
+retroBtn.onclick = () => this.showRetroStartModal();
+this.elements.timerControls.appendChild(retroBtn);
+}
+}
+
+updateFab() {
+const user = this.stateManager.getActiveUser();
+if (!user) {
+this.elements.fab.style.display = 'none';
+return;
+}
+this.elements.fab.style.display = 'flex';
+
+const timer = this.stateManager.getTimerForUser(user.id);
+let icon, label;
+
+switch (this.activeView) {
+case 'timer-view':
+if (timer.running) {
+icon = this.getIconSVG('stop');
+label = 'Zastavit měření';
+} else {
+icon = this.getIconSVG('play');
+label = 'Spustit měření';
+}
+break;
+case 'entries-view':
+icon = this.getIconSVG('add');
+label = 'Přidat záznam ručně';
+break;
+case 'settings-view':
+icon = this.getIconSVG('addUser');
+label = 'Přidat nového uživatele';
+break;
+default:
+icon = '';
+label = '';
+this.elements.fab.style.display = 'none';
+}
+
+this.elements.fab.innerHTML = icon;
+this.elements.fab.setAttribute('aria-label', label);
+}
+
+getIconSVG(name) {
+const color = 'currentColor';
+switch(name) {
+case 'play': return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="${color}" width="28px" height="28px"><path d="M8 5v14l11-7z"/></svg>`;
+case 'stop': return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="${color}" width="28px" height="28px"><path d="M6 6h12v12H6z"/></svg>`;
+case 'add': return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="${color}" width="28px" height="28px"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>`;
+case 'addUser': return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="${color}" width="28px" height="28px"><path d="M15 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm-9-2V7H4v3H1v2h3v3h2v-3h3v-2H6zm9 4c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>`;
+case 'edit': return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="${color}" width="20px" height="20px"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>`;
+case 'delete': return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="${color}" width="20px" height="20px"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>`;
+default: return '';
+}
+}
+
+handleNavClick(e) {
+const segment = e.target.closest('.ios-segment');
+if (!segment) return;
+
+if (this.stateManager.getState().settings.haptics) this.mobileFeatures.vibrate('light');
+this.switchView(segment.dataset.view);
+}
+
+switchView(viewId) {
+this.activeView = viewId;
+
+const segments = [...this.elements.navTabs.querySelectorAll('.ios-segment')];
+segments.forEach((s, i) => {
+if (s.dataset.view === viewId) {
+s.classList.add('active');
+this.elements.navIndicator.style.transform = `translateX(${i * 100}%)`;
+} else {
+s.classList.remove('active');
+}
+});
+
+this.elements.views.forEach(view => {
+view.classList.toggle('active', view.id === viewId);
+});
+
+if (viewId === 'stats-view') {
+this.app.chartManager.renderAllCharts();
+}
+
+this.updateFab();
+}
+
+handleFabClick() {
+if (this.stateManager.getState().settings.haptics) this.mobileFeatures.vibrate('medium');
+switch (this.activeView) {
+case 'timer-view':
+this.app.toggleTimer();
+break;
+case 'entries-view':
+this.showEntryModal();
+break;
+case 'settings-view':
+this.showUserModal();
+break;
+}
+}
+
+handleThemeChange(theme) {
+this.stateManager.setState({ settings: { ...this.stateManager.getState().settings, theme } });
+this.applyTheme(theme);
+}
+
+applyTheme(theme) {
+document.documentElement.classList.remove('theme-light', 'theme-dark');
+if (theme === 'light' || theme === 'dark') {
+document.documentElement.classList.add(`theme-${theme}`);
+}
+this.elements.themeSelect.value = theme;
+}
+
+handleCurrencyChange(currency) {
+this.stateManager.setState({ settings: { ...this.stateManager.getState().settings, currency } });
+this.updateFullUI();
+}
+
+renderEntries() {
+const state = this.stateManager.getState();
+const user = this.stateManager.getActiveUser();
+if (!user) {
+this.elements.entriesList.innerHTML = '<p>Žádný aktivní uživatel.</p>';
+return;
+}
+
+const searchTerm = this.elements.searchInput.value.toLowerCase();
+
+const filteredEntries = state.entries
+.filter(e => e.userId === user.id)
+.filter(e => e.taskName.toLowerCase().includes(searchTerm))
+.sort((a, b) => b.startAt - a.startAt);
+
+if (filteredEntries.length === 0) {
+this.elements.entriesList.innerHTML = '<p style="text-align:center; color: var(--muted);">Žádné záznamy k zobrazení.</p>';
+return;
+}
+
+// Jednoduchá virtualizace (Fáze 1 vylepšení): Renderovat jen viditelné položky
+// TODO: Implementovat plnou windowing pro velké seznamy
+
+this.elements.entriesList.innerHTML = filteredEntries.map(entry => this.createEntryHTML(entry)).join('');
+this.addSwipeListeners();
+}
+
+createEntryHTML(entry) {
+const currency = this.stateManager.getState().settings.currency;
+const earnings = (entry.durationMs / 3600000) * entry.rateAtTime;
+const start = new Date(entry.startAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+const end = new Date(entry.endAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+const date = new Date(entry.startAt).toLocaleDateString();
+
+return `
+<div class="entry-item" data-id="${entry.id}" role="listitem" tabindex="0">
+<div class="swipe-actions">
+<div class="swipe-action edit" data-action="edit" aria-label="Upravit">${this.getIconSVG('edit')}</div>
+<div class="swipe-action delete" data-action="delete" aria-label="Smazat">${this.getIconSVG('delete')}</div>
+</div>
+<div class="entry-item-content">
+<div>
+<div class="entry-task">${entry.taskName}</div>
+<div class="entry-details">${date} • ${start} - ${end}</div>
+</div>
+<div class="entry-time-info" style="text-align:right;">
+<div class="duration">${this.formatDuration(entry.durationMs, false)}</div>
+<div class="earnings">${earnings.toFixed(2)} ${currency}</div>
+</div>
+</div>
+</div>
+`;
+}
+
+addSwipeListeners() {
+const items = this.elements.entriesList.querySelectorAll('.entry-item');
+items.forEach(item => {
+let startX, currentX, isSwiping = false;
+
+item.addEventListener('touchstart', e => {
+startX = e.touches[0].clientX;
+isSwiping = true;
+}, { passive: true });
+
+item.addEventListener('touchmove', e => {
+if (!isSwiping) return;
+currentX = e.touches[0].clientX;
+const diff = currentX - startX;
+if (diff < 0 && diff > -150) { // Swipe left
+item.querySelector('.entry-item-content').style.transform = `translateX(${diff}px)`;
+}
+}, { passive: true });
+
+item.addEventListener('touchend', () => {
+if (!isSwiping) return;
+isSwiping = false;
+const diff = currentX - startX;
+const content = item.querySelector('.entry-item-content');
+content.style.transition = 'transform 0.3s ease';
+if (diff < -60) { // Threshold
+item.classList.add('swiped');
+content.style.transform = 'translateX(-140px)';
+if (this.stateManager.getState().settings.haptics) this.mobileFeatures.vibrate('light');
+} else {
+item.classList.remove('swiped');
+content.style.transform = 'translateX(0)';
+}
+setTimeout(() => content.style.transition = '', 300);
+startX = 0; currentX = 0;
+});
+
+item.querySelector('.swipe-action.edit').addEventListener('click', () => {
+if (this.stateManager.getState().settings.haptics) this.mobileFeatures.vibrate('medium');
+this.showEntryModal(item.dataset.id);
+});
+item.querySelector('.swipe-action.delete').addEventListener('click', () => {
+if (this.stateManager.getState().settings.haptics) this.mobileFeatures.vibrate('heavy');
+this.app.deleteEntryWithUndo(item.dataset.id);
+});
+});
+}
+
+renderUsersList() {
+const state = this.stateManager.getState();
+this.elements.usersList.innerHTML = state.users.map(user => `
+<div class="entry-item" style="cursor:pointer;" data-user-id="${user.id}" role="button" tabindex="0">
+<div>
+<div class="entry-task">${user.name}</div>
+<div class="entry-details">${user.rate} ${state.settings.currency}/hod</div>
+</div>
+<div style="background-color:${user.color}; width:20px; height:20px; border-radius:50%;"></div>
+</div>
+`).join('');
+
+this.elements.usersList.querySelectorAll('.entry-item').forEach(item => {
+item.addEventListener('click', () => {
+if (this.stateManager.getState().settings.haptics) this.mobileFeatures.vibrate('light');
+this.showUserModal(item.dataset.userId);
+});
+});
+}
+
+showModal(title, contentHTML) {
+const modalId = `modal-${Date.now()}`;
+const modalHTML = `
+<div class="modal-overlay visible" id="${modalId}" role="dialog" aria-modal="true">
+<div class="modal-content">
+<div class="modal-header">
+<h2 class="modal-title">${title}</h2>
+<button class="close-modal-btn" aria-label="Zavřít">×</button>
+</div>
+${contentHTML}
+</div>
+</div>
+`;
+this.elements.modalContainer.insertAdjacentHTML('beforeend', modalHTML);
+
+const modal = document.getElementById(modalId);
+const closeModal = () => {
+modal.classList.remove('visible');
+setTimeout(() => modal.remove(), 300);
+};
+
+modal.querySelector('.close-modal-btn').onclick = closeModal;
+modal.onclick = (e) => {
+if (e.target === modal) closeModal();
+};
+
+return modal;
+}
+
+closeAllModals() {
+this.elements.modalContainer.querySelectorAll('.modal-overlay').forEach(modal => {
+modal.classList.remove('visible');
+setTimeout(() => modal.remove(), 300);
+});
+}
+
+parseDurationInput(input) {
+// Parser pro formáty: 2:30, 150, 3h15m, 0830–1210, +45m, 2,5h
+input = input.trim();
+if (/^\d+:\d+$/.test(input)) { // 2:30
+const [h, m] = input.split(':').map(Number);
+return (h * 60 + m) * 60000;
+} else if (/^\d+$/.test(input)) { // 150 (minuty)
+return parseInt(input) * 60000;
+} else if (/^(\d+)h(\d+)m$/.test(input)) { // 3h15m
+const [, h, m] = input.match(/^(\d+)h(\d+)m$/);
+return (parseInt(h) * 60 + parseInt(m)) * 60000;
+} else if (/^\d{4}–\d{4}$/.test(input)) { // 0830–1210
+const [start, end] = input.split('–').map(t => parseInt(t.slice(0,2)) * 60 + parseInt(t.slice(2)));
+return (end - start) * 60000;
+} else if (/^\+\d+m$/.test(input)) { // +45m
+return parseInt(input.slice(1, -1)) * 60000;
+} else if (/^[\d,]+h$/.test(input)) { // 2,5h
+const h = parseFloat(input.replace(',', '.').slice(0, -1));
+return h * 3600000;
+}
+return 0; // Invalid
+}
+
+showEntryModal(entryId = null) {
+const entry = entryId ? this.stateManager.getState().entries.find(e => e.id === entryId) : null;
+const title = entry ? 'Upravit záznam' : 'Přidat ruční záznam';
+const user = this.stateManager.getActiveUser();
+
+const content = `
+<form id="entry-form">
+<div class="form-group">
+<label for="taskName">Název úkolu</label>
+<input type="text" id="taskName" class="ios-input" value="${entry?.taskName || ''}" required>
+</div>
+<div class="form-group">
+<label for="durationInput">Doba trvání (např. 2:30, 3h15m, 150)</label>
+<input type="text" id="durationInput" class="ios-input" placeholder="Zadejte dobu" value="${entry ? this.formatDuration(entry.durationMs, false) : ''}">
+</div>
+<div class="form-group">
+<label for="startTime">Čas začátku (HH:MM)</label>
+<input type="time" id="startTime" class="ios-input" value="${entry ? this.formatTimeForInput(entry.startAt) : ''}" required>
+</div>
+<div class="form-group">
+<label for="endTime">Čas konce (HH:MM)</label>
+<input type="time" id="endTime" class="ios-input" value="${entry ? this.formatTimeForInput(entry.endAt) : ''}" required>
+</div>
+<div class="form-group">
+<label for="entryDate">Datum</label>
+<input type="date" id="entryDate" class="ios-input" value="${entry ? this.formatDateForInput(entry.startAt) : this.formatDateForInput(Date.now())}" required>
+</div>
+<div class="form-group">
+<label for="rate">Sazba (/hod)</label>
+<input type="number" id="rate" class="ios-input" value="${entry?.rateAtTime || user.rate}" required>
+</div>
+<button type="submit" class="ios-button primary">${entry ? 'Uložit změny' : 'Přidat záznam'}</button>
+</form>
+`;
+
+const modal = this.showModal(title, content);
+modal.querySelector('#entry-form').onsubmit = e => {
+e.preventDefault();
+const form = e.target;
+const date = form.entryDate.value;
+const startAt = new Date(`${date}T${form.startTime.value}`).getTime();
+let durationMs = this.parseDurationInput(form.durationInput.value);
+let endAt = startAt + durationMs;
+
+if (form.endTime.value) {
+endAt = new Date(`${date}T${form.endTime.value}`).getTime();
+durationMs = endAt - startAt;
+}
+
+if (endAt <= startAt || durationMs <= 0) {
+alert('Čas konce musí být po čase začátku a doba kladná.');
+return;
+}
+
+const entryData = {
+userId: user.id,
+taskName: form.taskName.value,
+startAt,
+endAt,
+durationMs,
+rateAtTime: parseFloat(form.rate.value)
+};
+
+if (entry) {
+this.app.updateEntry(entryId, entryData);
+} else {
+this.app.addEntry(entryData);
+}
+this.closeAllModals();
+};
+}
+
+showUserModal(userId = null) {
+const user = userId ? this.stateManager.getState().users.find(u => u.id === userId) : null;
+const title = user ? 'Upravit uživatele' : 'Přidat uživatele';
+
+const content = `
+<form id="user-form">
+<div class="form-group">
+<label for="userName">Jméno</label>
+<input type="text" id="userName" class="ios-input" value="${user?.name || ''}" required>
+</div>
+<div class="form-group">
+<label for="userRate">Hodinová sazba</label>
+<input type="number" id="userRate" class="ios-input" value="${user?.rate || ''}" required>
+</div>
+<div class="form-group">
+<label for="userColor">Barva</label>
+<input type="color" id="userColor" class="ios-input" value="${user?.color || '#39D353'}">
+</div>
+<button type="submit" class="ios-button primary">${user ? 'Uložit změny' : 'Vytvořit uživatele'}</button>
+${user ? '<button type="button" id="delete-user-btn" class="ios-button danger" style="margin-top:10px;">Smazat uživatele</button>' : ''}
+</form>
+`;
+
+const modal = this.showModal(title, content);
+
+modal.querySelector('#user-form').onsubmit = e => {
+e.preventDefault();
+const form = e.target;
+const userData = {
+name: form.userName.value,
+rate: parseFloat(form.userRate.value),
+color: form.userColor.value,
+icon: form.userName.value.charAt(0).toUpperCase(),
+};
+
+if (user) {
+this.app.updateUser(userId, userData);
+} else {
+this.app.addUser(userData);
+}
+this.closeAllModals();
+};
+
+if (user) {
+modal.querySelector('#delete-user-btn').onclick = () => {
+if (confirm(`Opravdu chcete smazat uživatele ${user.name}? Tím se smažou i všechny jeho záznamy.`)) {
+this.app.deleteUser(userId);
+this.closeAllModals();
+}
+};
+}
+}
+
+showRetroStartModal() {
+const content = `
+<form id="retro-start-form">
+<div class="form-group">
+<label for="retroTaskName">Název úkolu (nepovinné)</label>
+<input type="text" id="retroTaskName" class="ios-input">
+</div>
+<div class="form-group">
+<label for="retroStartTime">Čas začátku (HH:MM)</label>
+<input type="time" id="retroStartTime" class="ios-input" value="${this.formatTimeForInput(Date.now())}" required>
+</div>
+<button type="submit" class="ios-button primary">Spustit měření</button>
+</form>
+`;
+const modal = this.showModal('Spustit měření zpětně', content);
+modal.querySelector('#retro-start-form').onsubmit = e => {
+e.preventDefault();
+const form = e.target;
+const taskName = form.retroTaskName.value;
+const startTime = form.retroStartTime.value;
+const [hours, minutes] = startTime.split(':');
+const startDate = new Date();
+startDate.setHours(hours, minutes, 0, 0);
+
+if (startDate.getTime() > Date.now()) {
+alert('Čas začátku nemůže být v budoucnosti.');
+return;
+}
+
+this.app.startTimer(taskName, startDate.getTime());
+this.closeAllModals();
+};
+}
+
+showBackupModal() {
+const content = `
+<p>Zde můžete exportovat všechna svá data do souboru JSON pro zálohu, nebo je importovat zpět.</p>
+<button id="json-export-btn" class="ios-button primary">Exportovat data</button>
+<div class="form-group" style="margin-top: 20px;">
+<label for="json-import-input">Importovat ze souboru</label>
+<input type="file" id="json-import-input" accept=".json" class="ios-input">
+</div>
+`;
+const modal = this.showModal('Záloha a Obnova', content);
+
+modal.querySelector('#json-export-btn').onclick = () => {
+this.app.backupManager.exportToJSON();
+if (this.stateManager.getState().settings.haptics) this.mobileFeatures.vibrate('success');
+};
+
+modal.querySelector('#json-import-input').onchange = async (e) => {
+const file = e.target.files[0];
+if (file) {
+try {
+await this.app.backupManager.importFromJSON(file);
+this.showToast('Data byla úspěšně importována.');
+this.app.initUI();
+this.closeAllModals();
+} catch (err) {
+alert(`Chyba při importu: ${err.message}`);
+}
+}
+};
+}
+
+showToast(message, actionText = null, onAction = null, duration = 4000) {
+const toastId = `toast-${Date.now()}`;
+const toast = document.createElement('div');
+toast.className = 'toast';
+toast.id = toastId;
+
+let html = `<span>${message}</span>`;
+if (actionText && onAction) {
+html += `<button class="toast-undo-btn">${actionText}</button>`;
+}
+toast.innerHTML = html;
+
+this.elements.toastContainer.appendChild(toast);
+
+setTimeout(() => toast.classList.add('show'), 10);
+
+const removeToast = () => {
+toast.classList.remove('show');
+setTimeout(() => toast.remove(), 300);
+};
+
+const timeoutId = setTimeout(removeToast, duration);
+
+if (actionText && onAction) {
+toast.querySelector('button').onclick = () => {
+clearTimeout(timeoutId);
+onAction();
+removeToast();
+};
+}
+}
+
+updateDiagnostics() {
+const stateSize = (localStorage.getItem(DB_KEY)?.length / 1024).toFixed(2) || 0;
+const backupDate = localStorage.getItem(AUTO_BACKUP_KEY) ? new Date(JSON.parse(localStorage.getItem(AUTO_BACKUP_KEY)).lastBackupDateISO).toLocaleString() : 'Nikdy';
+this.elements.diagInfo.innerHTML = `
+Velikost dat: ${stateSize} KB<br>
+Poslední autozáloha: ${backupDate}<br>
+Verze schématu: ${this.stateManager.getState().schemaVersion}
+`;
+}
+
+// -- Pomocné funkce --
+formatDuration(ms, showSeconds = true) {
+if (ms < 0) ms = 0;
+const totalSeconds = Math.floor(ms / 1000);
+const hours = Math.floor(totalSeconds / 3600);
+const minutes = Math.floor((totalSeconds % 3600) / 60);
+const seconds = totalSeconds % 60;
+
+if (showSeconds) {
+return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+} else {
+return `${hours}h ${String(minutes).padStart(2, '0')}m`;
+}
+}
+
+formatTimeForInput(timestamp) {
+const date = new Date(timestamp);
+return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+}
+
+formatDateForInput(timestamp) {
+const date = new Date(timestamp);
+const year = date.getFullYear();
+const month = String(date.getMonth() + 1).padStart(2, '0');
+const day = String(date.getDate()).padStart(2, '0');
+return `${year}-${month}-${day}`;
+}
+
+debounce(func, delay) {
+let timeout;
+return function(...args) {
+const context = this;
+clearTimeout(timeout);
+timeout = setTimeout(() => func.apply(context, args), delay);
+};
+}
+}
+
+/**
+ * @class App
+ * @description Hlavní třída aplikace, která vše spojuje.
+ */
+class App {
+constructor() {
+this.stateManager = new StateManager();
+this.pwaManager = new PWA_Manager();
+this.notificationManager = new NotificationManager();
+this.mobileFeatures = new EnhancedMobileFeatures();
+this.wakeLockManager = new WakeLockManager();
+this.backupManager = new BackupManager(this.stateManager);
+this.uiManager = new UIManager(this);
+this.chartManager = new ChartManager(this.stateManager);
+this.timerInterval = null;
+}
+
+async init() {
+await this.pwaManager.init();
+await this.notificationManager.init();
+
+this.stateManager.loadState();
+this.backupManager.autoBackup();
+
+this.initUI();
+this.pullToRefreshManager = new PullToRefreshManager(this.uiManager.elements.mainContent, async () => {
+this.uiManager.updateFullUI();
+});
+
+this.startTimerInterval();
+this.checkMonthlyExport();
+}
+
+initUI() {
+this.uiManager.initEventListeners();
+this.uiManager.updateFullUI();
+}
+
+startTimerInterval() {
+if (this.timerInterval) clearInterval(this.timerInterval);
+this.timerInterval = setInterval(() => {
+this.uiManager.updateTimerDisplay();
+this.checkRunningTimerNotification();
+}, 1000);
+}
+
+// -- Logika časovače --
+toggleTimer() {
+const user = this.stateManager.getActiveUser();
+if (!user) return;
+const timer = this.stateManager.getTimerForUser(user.id);
+if (timer.running) {
+this.stopTimer();
+} else {
+this.startTimer();
+}
+}
+
+startTimer(taskName = null, startTime = null) {
+const user = this.stateManager.getActiveUser();
+if (!user) return;
+
+const showTaskPrompt = taskName === null && startTime === null;
+
+const finalTaskName = showTaskPrompt ? prompt('Zadejte název úkolu (nepovinné):', '') : taskName;
+
+const timer = this.stateManager.getTimerForUser(user.id);
+timer.running = true;
+timer.startAt = startTime || Date.now();
+timer.pausedAccumMs = 0;
+timer.currentTaskName = finalTaskName || '';
+
+this.stateManager.saveStateThrottled();
+this.uiManager.updateFullUI();
+this.wakeLockManager.request();
+if (this.stateManager.getState().settings.notifications) {
+this.notificationManager.notify('Časovač spuštěn', `Sledování času pro úkol "${timer.currentTaskName}" začalo.`);
+}
+}
+
+pauseTimer() {
+const user = this.stateManager.getActiveUser();
+if (!user) return;
+const timer = this.stateManager.getTimerForUser(user.id);
+if (!timer.running) return;
+
+timer.pausedAccumMs += Date.now() - timer.startAt;
+timer.running = false;
+timer.startAt = null;
+
+this.stateManager.saveStateThrottled();
+this.uiManager.updateFullUI();
+this.wakeLockManager.release();
+}
+
+resumeTimer() {
+const user = this.stateManager.getActiveUser();
+if (!user) return;
+const timer = this.stateManager.getTimerForUser(user.id);
+if (timer.running) return;
+
+timer.running = true;
+timer.startAt = Date.now();
+
+this.stateManager.saveStateThrottled();
+this.uiManager.updateFullUI();
+this.wakeLockManager.request();
+}
+
+stopTimer() {
+const user = this.stateManager.getActiveUser();
+if (!user) return;
+const timer = this.stateManager.getTimerForUser(user.id);
+
+let durationMs = timer.pausedAccumMs;
+if (timer.running) {
+durationMs += Date.now() - timer.startAt;
+}
+
+if (durationMs < 1000) { // Neukládat záznamy kratší než 1s
+this.resetTimer();
+return;
+}
+
+const endAt = Date.now();
+const startAt = endAt - durationMs;
+
+const entryData = {
+userId: user.id,
+taskName: timer.currentTaskName || 'Bez názvu',
+startAt: startAt,
+endAt: endAt,
+durationMs: durationMs,
+rateAtTime: user.rate,
+};
+this.addEntry(entryData);
+
+if (this.stateManager.getState().settings.notifications) {
+this.notificationManager.notify('Časovač zastaven', `Záznam "${entryData.taskName}" byl uložen.`);
+}
+this.resetTimer();
+this.wakeLockManager.release();
+}
+
+resetTimer() {
+const user = this.stateManager.getActiveUser();
+if (!user) return;
+const timer = this.stateManager.getTimerForUser(user.id);
+timer.running = false;
+timer.startAt = null;
+timer.pausedAccumMs = 0;
+timer.currentTaskName = '';
+this.stateManager.saveStateThrottled();
+this.uiManager.updateFullUI();
+}
+
+// -- Správa dat --
+addEntry(entryData) {
+this.stateManager.addEntry(entryData);
+this.uiManager.updateFullUI();
+}
+
+updateEntry(entryId, updates) {
+this.stateManager.updateEntry(entryId, updates);
+this.uiManager.updateFullUI();
+}
+
+deleteEntryWithUndo(entryId) {
+const deletedEntry = this.stateManager.deleteEntry(entryId);
+if (deletedEntry) {
+this.uiManager.updateFullUI();
+this.uiManager.showToast(
+'Záznam smazán.',
+'Vrátit zpět',
+() => {
+this.stateManager.reAddEntry(deletedEntry);
+this.uiManager.updateFullUI();
+}
+);
+}
+}
+
+addUser(userData) {
+const newUser = {
+id: this.stateManager.generateId(),
+active: true,
+...userData
+};
+const state = this.stateManager.getState();
+state.users.push(newUser);
+if (!state.activeUserId) {
+state.activeUserId = newUser.id;
+}
+this.stateManager.saveStateThrottled();
+this.uiManager.updateFullUI();
+}
+
+updateUser(userId, updates) {
+const state = this.stateManager.getState();
+const userIndex = state.users.findIndex(u => u.id === userId);
+if (userIndex > -1) {
+state.users[userIndex] = { ...state.users[userIndex], ...updates };
+this.stateManager.saveStateThrottled();
+this.uiManager.updateFullUI();
+}
+}
+
+deleteUser(userId) {
+const state = this.stateManager.getState();
+state.users = state.users.filter(u => u.id !== userId);
+state.entries = state.entries.filter(e => e.userId !== userId);
+delete state.timers[userId];
+
+if (state.activeUserId === userId) {
+state.activeUserId = state.users.length > 0 ? state.users[0].id : null;
+}
+
+this.stateManager.saveStateThrottled();
+this.uiManager.updateFullUI();
+}
+
+// -- Export a nástroje --
+exportCSV() {
+const state = this.stateManager.getState();
+const user = this.stateManager.getActiveUser();
+if (!user) return;
+
+const headers = ['Datum', 'Úkol', 'Začátek', 'Konec', 'Doba trvání (hodiny)', 'Sazba', 'Výdělek', 'Měna'];
+const rows = state.entries
+.filter(e => e.userId === user.id)
+.map(e => {
+const earnings = (e.durationMs / 3600000) * e.rateAtTime;
+return [
+new Date(e.startAt).toLocaleDateString(),
+`"${e.taskName.replace(/"/g, '""')}"`,
+new Date(e.startAt).toLocaleTimeString(),
+new Date(e.endAt).toLocaleTimeString(),
+(e.durationMs / 3600000).toFixed(4),
+e.rateAtTime,
+earnings.toFixed(2),
+state.settings.currency
+].join(',');
+});
+
+const csvContent = "data:text/csv;charset=utf-8," + [headers.join(','), ...rows].join('\n');
+const encodedUri = encodeURI(csvContent);
+const link = document.createElement("a");
+link.setAttribute("href", encodedUri);
+link.setAttribute("download", `worktime_export_${user.name}.csv`);
+document.body.appendChild(link);
+link.click();
+document.body.removeChild(link);
+}
+
+checkMonthlyExport() {
+const today = new Date();
+if (today.getDate() === 1) {
+const lastNotificationKey = `monthlyExportNotif_${today.getFullYear()}_${today.getMonth()}`;
+if (!localStorage.getItem(lastNotificationKey)) {
+if (this.stateManager.getState().settings.notifications) {
+this.notificationManager.notify(
+'Měsíční export je připraven',
+'Klepnutím přejdete do nastavení a stáhnete si přehled za minulý měsíc.',
+{ actions: [{ action: 'export', title: 'Exportovat' }] }
+);
+}
+localStorage.setItem(lastNotificationKey, 'true');
+}
+}
+}
+
+checkRunningTimerNotification() {
+const user = this.stateManager.getActiveUser();
+if (!user) return;
+const timer = this.stateManager.getTimerForUser(user.id);
+
+if(timer.running && this.stateManager.getState().settings.notifications) {
+const elapsedMinutes = (Date.now() - timer.startAt) / 60000;
+// Připomenutí každých 60 minut
+if (elapsedMinutes > 0 && elapsedMinutes % 60 < 1/60) {
+this.notificationManager.notify(
+'Časovač stále běží',
+`Už pracujete ${Math.round(elapsedMinutes)} minut. Nezapomeňte si dát pauzu!`
+);
+}
+}
+}
+
+generateDemoData() {
+if (!confirm('Tímto přepíšete stávající data. Pokračovat?')) return;
+
+this.stateManager.state = this.stateManager.getDefaultState();
+const user1 = { id: 'user1', name: 'Tomáš', rate: 550, color: '#0d8eff', icon: 'T', active: true };
+const user2 = { id: 'user2', name: 'Jana', rate: 600, color: '#ff453a', icon: 'J', active: true };
+this.stateManager.state.users = [user1, user2];
+this.stateManager.state.activeUserId = 'user1';
+
+const entries = [];
+for (let i = 0; i < 30; i++) {
+const date = new Date();
+date.setDate(date.getDate() - i);
+for (let j = 0; j < Math.random() * 4; j++) {
+const startHour = 8 + Math.floor(Math.random() * 8);
+date.setHours(startHour, Math.floor(Math.random()*60), 0, 0);
+const startAt = date.getTime();
+const durationMs = (0.5 + Math.random() * 3) * 3600000;
+const endAt = startAt + durationMs;
+
+entries.push({
+id: this.stateManager.generateId(),
+userId: Math.random() > 0.5 ? 'user1' : 'user2',
+taskName: `Demo úkol ${i}-${j}`,
+category: Math.random() > 0.5 ? 'Práce' : 'Projekt',
+startAt, endAt, durationMs,
+rateAtTime: Math.random() > 0.5 ? 550 : 600,
+createdAt: Date.now(), updatedAt: Date.now(), history: []
+});
+}
+}
+this.stateManager.state.entries = entries;
+this.stateManager.saveState();
+this.initUI();
+this.uiManager.showToast('Demo data byla vygenerována.');
+}
+
+clearAllData() {
+if (confirm('OPRAVDU chcete smazat VŠECHNA data? Tato akce je nevratná.')) {
+localStorage.removeItem(DB_KEY);
+localStorage.removeItem(AUTO_BACKUP_KEY);
+window.location.reload();
+}
+}
+}
+
+// -- Spuštění aplikace --
+const app = new App();
+app.init();
+
+});
+</script>
 </body>
 </html>
