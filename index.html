@@ -1,2485 +1,968 @@
 <!DOCTYPE html>
 <html lang="cs">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
-<base href="/worktime-tracker-pwa/">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#39D353">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="WorkTime">
 
-<!-- PWA Meta Tags for iOS -->
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="WorkTime">
-<meta name="theme-color" content="#0D1117">
+    <title>WorkTime Tracker - Sledování pracovního času</title>
+    <meta name="description" content="Profesionální aplikace pro sledování pracovního času s offline podporou">
 
-<title>WorkTime Tracker</title>
+    <style>
+        :root {
+            --accent: #39D353;
+            --bg: #0D1117;
+            --text: #E6EDF3;
+            --muted: #8B949E;
+            --surface: #161B22;
+            --surface-hover: #1C2128;
+            --border: #30363D;
+            --danger: #F85149;
+            --warning: #D29922;
+            --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            --border-radius: 12px;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            --transition: all 0.2s ease;
+        }
 
-<style>
-/* -- Globální styly a CSS proměnné -- */
-:root {
---accent: #39D353;
---bg: #0D1117;
---text: #E6EDF3;
---muted: #8B949E;
---surface: #161B22;
---border: #30363d;
---danger: #f85149;
---success: #39D353;
---warning: #d29922;
+        @media (prefers-color-scheme: light) {
+            :root {
+                --bg: #FFFFFF;
+                --text: #1F2328;
+                --muted: #656D76;
+                --surface: #F6F8FA;
+                --surface-hover: #EAEEF2;
+                --border: #D0D7DE;
+                --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            }
+        }
 
---safe-area-top: env(safe-area-inset-top, 0px);
---safe-area-bottom: env(safe-area-inset-bottom, 0px);
---safe-area-left: env(safe-area-inset-left, 0px);
---safe-area-right: env(safe-area-inset-right, 0px);
-}
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
 
-.theme-light {
---bg: #ffffff;
---text: #1f2328;
---muted: #656d76;
---surface: #f6f8fa;
---border: #d0d7de;
-}
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: var(--font-family);
+            line-height: 1.6;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
 
-@media (prefers-color-scheme: light) {
-:root:not(.theme-dark) {
---bg: #ffffff;
---text: #1f2328;
---muted: #656d76;
---surface: #f6f8fa;
---border: #d0d7de;
-}
-}
+        .app-header {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+            padding-top: max(1rem, env(safe-area-inset-top));
+        }
 
-@media (prefers-reduced-motion: reduce) {
-*, *::before, *::after {
-animation-duration: 0.01ms !important;
-animation-iteration-count: 1 !important;
-transition-duration: 0.01ms !important;
-scroll-behavior: auto !important;
-}
-}
+        .header-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--accent);
+            text-align: center;
+        }
 
-html, body {
-margin: 0;
-padding: 0;
-height: 100%;
-width: 100%;
-overflow: hidden;
-font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
-background-color: var(--bg);
-color: var(--text);
--webkit-font-smoothing: antialiased;
--moz-osx-font-smoothing: grayscale;
--webkit-tap-highlight-color: transparent;
-}
+        .main-content {
+            flex: 1;
+            padding: 1.5rem;
+            max-width: 800px;
+            margin: 0 auto;
+            width: 100%;
+        }
 
-#app-container {
-display: flex;
-flex-direction: column;
-height: 100%;
-width: 100%;
-position: relative;
-}
+        .timer-section {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
 
-/* -- Horní lišta -- */
-.app-header {
-padding: 10px 15px;
-padding-top: calc(10px + var(--safe-area-top));
-background-color: var(--surface);
-border-bottom: 1px solid var(--border);
-display: flex;
-justify-content: space-between;
-align-items: center;
-flex-shrink: 0;
-position: sticky;
-top: 0;
-z-index: 10;
-}
+        .current-time {
+            font-size: 3.5rem;
+            font-weight: 300;
+            color: var(--accent);
+            font-variant-numeric: tabular-nums;
+            margin-bottom: 1rem;
+            font-family: 'SF Mono', Monaco, monospace;
+        }
 
-.user-switcher {
-display: flex;
-align-items: center;
-gap: 10px;
-cursor: pointer;
-}
+        .timer-controls {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 2rem;
+        }
 
-.user-avatar {
-width: 36px;
-height: 36px;
-border-radius: 50%;
-display: flex;
-align-items: center;
-justify-content: center;
-font-weight: bold;
-font-size: 16px;
-color: var(--bg);
-}
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            min-height: 44px;
+            text-decoration: none;
+        }
 
-.user-name {
-font-weight: 600;
-}
+        .btn-primary {
+            background: var(--accent);
+            color: white;
+        }
 
-.header-summary {
-text-align: right;
-}
+        .btn-primary:hover {
+            background: #2EA043;
+            transform: translateY(-1px);
+            box-shadow: var(--shadow);
+        }
 
-.summary-time {
-font-size: 16px;
-font-weight: 600;
-}
+        .btn-secondary {
+            background: var(--surface);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
 
-.summary-earnings {
-font-size: 12px;
-color: var(--muted);
-}
+        .btn-secondary:hover {
+            background: var(--surface-hover);
+        }
 
-/* -- iOS Segmented Control -- */
-.ios-nav {
-padding: 10px 15px;
-background-color: var(--surface);
-border-bottom: 1px solid var(--border);
-flex-shrink: 0;
-}
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
 
-.ios-segmented-control {
-display: flex;
-width: 100%;
-background-color: var(--bg);
-border-radius: 8px;
-padding: 2px;
-position: relative;
-border: 1px solid var(--border);
-}
+        .btn-danger:hover {
+            background: #E5484D;
+        }
 
-.ios-segment {
-flex: 1;
-padding: 8px 0;
-text-align: center;
-font-size: 14px;
-font-weight: 500;
-cursor: pointer;
-color: var(--muted);
-background: none;
-border: none;
-position: relative;
-z-index: 2;
-transition: color 0.3s ease;
-touch-action: manipulation;
-}
+        .section {
+            background: var(--surface);
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid var(--border);
+        }
 
-.ios-segment.active {
-color: var(--text);
-}
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
 
-.ios-segment-indicator {
-position: absolute;
-top: 2px;
-bottom: 2px;
-width: calc(25% - 2px);
-background-color: var(--surface);
-border-radius: 6px;
-box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-z-index: 1;
-border: 1px solid var(--border);
-}
+        .form-group {
+            margin-bottom: 1rem;
+        }
 
-/* -- Hlavní obsah -- */
-.main-content {
-flex-grow: 1;
-overflow-y: auto;
--webkit-overflow-scrolling: touch;
-position: relative;
-}
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--text);
+        }
 
-.app-view {
-display: none;
-padding: 15px;
-padding-bottom: calc(90px + var(--safe-area-bottom)); /* Prostor pro FAB a spodní lištu */
-}
+        .form-input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--bg);
+            color: var(--text);
+            font-size: 1rem;
+            transition: var(--transition);
+        }
 
-.app-view.active {
-display: block;
-}
+        .form-input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(57, 211, 83, 0.1);
+        }
 
-/* -- Pull to Refresh -- */
-#pull-to-refresh-indicator {
-position: absolute;
-top: -50px;
-left: 0;
-right: 0;
-height: 50px;
-display: flex;
-align-items: center;
-justify-content: center;
-z-index: 0;
-color: var(--muted);
-font-size: 24px;
-opacity: 0;
-transition: opacity 0.2s ease;
-}
-#pull-to-refresh-indicator .arrow { transform: rotate(180deg); transition: transform 0.2s ease; }
-#pull-to-refresh-indicator.ready .arrow { transform: rotate(0deg); }
-#pull-to-refresh-indicator .spinner { display: none; }
-#pull-to-refresh-indicator.refreshing .arrow { display: none; }
-#pull-to-refresh-indicator.refreshing .spinner { display: block; animation: spin 1s linear infinite; }
-@keyframes spin { 100% { transform: rotate(360deg); } }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
 
-/* -- FAB (Floating Action Button) -- */
-.fab {
-position: fixed;
-bottom: calc(20px + var(--safe-area-bottom));
-right: calc(20px + var(--safe-area-right));
-width: 60px;
-height: 60px;
-border-radius: 50%;
-background: linear-gradient(45deg, var(--accent), #25a244);
-color: white;
-border: none;
-display: flex;
-align-items: center;
-justify-content: center;
-box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-cursor: pointer;
-z-index: 100;
-transition: transform 0.2s ease, box-shadow 0.2s ease;
-touch-action: manipulation;
-}
+        .stat-card {
+            background: var(--bg);
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            text-align: center;
+        }
 
-.fab:active {
-transform: scale(0.95);
-box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
-}
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--accent);
+            display: block;
+        }
 
-.fab svg {
-width: 28px;
-height: 28px;
-}
+        .stat-label {
+            color: var(--muted);
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+        }
 
-/* -- UI Komponenty -- */
-.ios-button {
-display: inline-block;
-width: 100%;
-min-height: 44px;
-padding: 10px 20px;
-font-size: 17px;
-font-weight: 500;
-text-align: center;
-border: none;
-border-radius: 10px;
-cursor: pointer;
-background-color: var(--surface);
-color: var(--accent);
-transition: background-color 0.2s ease;
-touch-action: manipulation;
-}
+        .settings-list {
+            list-style: none;
+        }
 
-.ios-button.primary {
-background-color: var(--accent);
-color: white;
-}
+        .settings-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 0;
+            border-bottom: 1px solid var(--border);
+        }
 
-.ios-button.danger {
-background-color: var(--danger);
-color: white;
-}
-.ios-button:disabled {
-opacity: 0.5;
-cursor: not-allowed;
-}
+        .settings-item:last-child {
+            border-bottom: none;
+        }
 
-.ios-button:not(:disabled):active {
-filter: brightness(0.9);
-}
+        .toggle {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 28px;
+        }
 
-.ios-button:focus-visible {
-outline: none;
-box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 20%, transparent);
-}
+        .toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
 
-.form-group {
-margin-bottom: 20px;
-}
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--border);
+            transition: var(--transition);
+            border-radius: 14px;
+        }
 
-.form-group label {
-display: block;
-font-size: 14px;
-color: var(--muted);
-margin-bottom: 8px;
-}
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: var(--transition);
+            border-radius: 50%;
+        }
 
-.ios-input {
-width: 100%;
-padding: 12px 15px;
-font-size: 16px;
-background-color: var(--surface);
-color: var(--text);
-border: 1px solid var(--border);
-border-radius: 8px;
-box-sizing: border-box;
-}
+        .toggle input:checked + .toggle-slider {
+            background-color: var(--accent);
+        }
 
-.ios-input:focus {
-outline: none;
-border-color: var(--accent);
-box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 20%, transparent);
-}
+        .toggle input:checked + .toggle-slider:before {
+            transform: translateX(22px);
+        }
 
-/* -- Pohled Časovače -- */
-#timer-view .timer-display {
-text-align: center;
-margin: 40px 0;
-}
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
 
-#timer-view .timer-time {
-font-size: 72px;
-font-weight: 200;
-letter-spacing: 2px;
-font-variant-numeric: tabular-nums;
-}
+        .status-working {
+            background: rgba(57, 211, 83, 0.1);
+            color: var(--accent);
+        }
 
-#timer-view .timer-earnings {
-font-size: 24px;
-color: var(--muted);
-margin-top: 10px;
-}
+        .status-paused {
+            background: rgba(210, 153, 34, 0.1);
+            color: var(--warning);
+        }
 
-#timer-view .timer-task {
-text-align: center;
-font-size: 18px;
-color: var(--muted);
-min-height: 27px;
-}
+        .status-stopped {
+            background: rgba(139, 148, 158, 0.1);
+            color: var(--muted);
+        }
 
-#timer-view .timer-controls {
-display: flex;
-justify-content: center;
-gap: 15px;
-margin-top: 30px;
-}
+        .floating-actions {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            z-index: 50;
+        }
 
-/* -- Pohled Záznamů -- */
-.search-filter-bar {
-display: flex;
-gap: 10px;
-margin-bottom: 15px;
-}
-.search-filter-bar .ios-input { flex-grow: 1; }
+        .fab {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: var(--accent);
+            color: white;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+        }
 
-.entry-item {
-background-color: var(--surface);
-border-radius: 10px;
-padding: 15px;
-margin-bottom: 10px;
-display: flex;
-justify-content: space-between;
-align-items: center;
-position: relative;
-overflow: hidden;
-}
+        .fab:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(57, 211, 83, 0.4);
+        }
 
-.entry-item-content {
-transition: transform 0.3s ease;
-}
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--surface);
+            color: var(--text);
+            padding: 1rem 1.5rem;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+            z-index: 1000;
+            animation: slideUp 0.3s ease;
+        }
 
-.entry-item.swiped .entry-item-content {
-transform: translateX(-140px);
-}
+        @keyframes slideUp {
+            from {
+                transform: translate(-50%, 100%);
+                opacity: 0;
+            }
+            to {
+                transform: translate(-50%, 0);
+                opacity: 1;
+            }
+        }
 
-.entry-task { font-weight: 600; }
-.entry-details { font-size: 14px; color: var(--muted); margin-top: 5px; }
-.entry-time-info .duration { font-size: 18px; font-weight: 500; }
-.entry-time-info .earnings { font-size: 14px; color: var(--success); }
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: var(--border);
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 1rem 0;
+        }
 
-.swipe-actions {
-position: absolute;
-top: 0;
-right: 0;
-height: 100%;
-display: flex;
-}
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent), #2EA043);
+            width: 0%;
+            transition: width 0.3s ease;
+            border-radius: 4px;
+        }
 
-.swipe-action {
-width: 70px;
-display: flex;
-align-items: center;
-justify-content: center;
-color: white;
-cursor: pointer;
-}
+        @media (max-width: 768px) {
+            .current-time {
+                font-size: 2.5rem;
+            }
+            
+            .timer-controls {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .btn {
+                width: 100%;
+                max-width: 280px;
+                justify-content: center;
+            }
 
-.swipe-action.edit { background-color: #0d8eff; }
-.swipe-action.delete { background-color: var(--danger); }
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
 
-/* -- Modální okna -- */
-.modal-overlay {
-position: fixed;
-top: 0;
-left: 0;
-width: 100%;
-height: 100%;
-background-color: rgba(0,0,0,0.6);
-display: flex;
-align-items: flex-end;
-justify-content: center;
-z-index: 1000;
-opacity: 0;
-visibility: hidden;
-transition: opacity 0.3s ease, visibility 0.3s ease;
-}
+            .main-content {
+                padding: 1rem;
+            }
+        }
 
-.modal-overlay.visible {
-opacity: 1;
-visibility: visible;
-}
-
-.modal-content {
-background-color: var(--surface);
-width: 100%;
-max-width: 500px;
-max-height: 90vh;
-border-radius: 20px 20px 0 0;
-padding: 20px;
-padding-bottom: calc(20px + var(--safe-area-bottom));
-box-sizing: border-box;
-overflow-y: auto;
-transform: translateY(100%);
-transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.modal-overlay.visible .modal-content {
-transform: translateY(0);
-}
-
-.modal-header {
-display: flex;
-justify-content: space-between;
-align-items: center;
-margin-bottom: 20px;
-}
-
-.modal-title {
-font-size: 20px;
-font-weight: 600;
-}
-
-.close-modal-btn {
-background: var(--bg);
-border: 1px solid var(--border);
-color: var(--muted);
-width: 30px;
-height: 30px;
-border-radius: 50%;
-cursor: pointer;
-font-size: 16px;
-}
-
-/* -- Toast/Undo notifikace -- */
-#toast-container {
-position: fixed;
-bottom: calc(90px + var(--safe-area-bottom));
-left: 50%;
-transform: translateX(-50%);
-z-index: 1100;
-display: flex;
-flex-direction: column;
-align-items: center;
-gap: 10px;
-}
-
-.toast {
-background-color: #323232;
-color: white;
-padding: 12px 20px;
-border-radius: 25px;
-font-size: 14px;
-display: flex;
-align-items: center;
-gap: 15px;
-box-shadow: 0 4px 10px rgba(0,0,0,0.25);
-opacity: 0;
-transform: translateY(20px);
-transition: opacity 0.3s ease, transform 0.3s ease;
-}
-
-.toast.show {
-opacity: 1;
-transform: translateY(0);
-}
-
-.toast-undo-btn {
-background: none;
-border: none;
-color: var(--accent);
-font-weight: bold;
-cursor: pointer;
-padding: 0;
-}
-
-</style>
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+    </style>
 </head>
 <body>
-
-<div id="app-container">
-<!-- Pull to Refresh Indikátor -->
-<div id="pull-to-refresh-indicator">
-<div class="arrow">↓</div>
-<div class="spinner">⏳</div>
-</div>
-
-<!-- Horní lišta -->
-<header class="app-header">
-<div class="user-switcher" id="user-switcher">
-<div class="user-avatar" id="user-avatar"></div>
-<span class="user-name" id="user-name"></span>
-</div>
-<div class="header-summary">
-<div class="summary-time" id="summary-time">0:00:00</div>
-<div class="summary-earnings" id="summary-earnings">0.00 CZK</div>
-</div>
-</header>
-
-<!-- Navigace -->
-<nav class="ios-nav">
-<div class="ios-segmented-control" id="nav-tabs">
-<div class="ios-segment-indicator" id="nav-indicator"></div>
-<button class="ios-segment active" data-view="timer-view">Časovač</button>
-<button class="ios-segment" data-view="entries-view">Záznamy</button>
-<button class="ios-segment" data-view="stats-view">Statistiky</button>
-<button class="ios-segment" data-view="settings-view">Nastavení</button>
-</div>
-</nav>
-
-<!-- Hlavní obsah -->
-<main class="main-content">
-<!-- Pohled: Časovač -->
-<div id="timer-view" class="app-view active">
-<div class="timer-display">
-<div class="timer-time" id="timer-time">00:00:00</div>
-<div class="timer-earnings" id="timer-earnings">0.00 CZK</div>
-</div>
-<div class="timer-task" id="timer-task">Žádný aktivní úkol</div>
-<div class="timer-controls" id="timer-controls">
-<!-- Tlačítka se generují dynamicky -->
-</div>
-</div>
-
-<!-- Pohled: Záznamy -->
-<div id="entries-view" class="app-view">
-<div class="search-filter-bar">
-<input type="search" id="search-input" class="ios-input" placeholder="Hledat v záznamech...">
-</div>
-<div id="entries-list"></div>
-</div>
-
-<!-- Pohled: Statistiky -->
-<div id="stats-view" class="app-view">
-<h3>Odpracovaný čas (tento týden)</h3>
-<canvas id="time-chart" width="400" height="200"></canvas>
-<h3>Výdělky podle kategorií</h3>
-<canvas id="earnings-chart" width="400" height="200"></canvas>
-<h3>Heatmapa produktivity</h3>
-<canvas id="heatmap-chart" width="400" height="250"></canvas>
-</div>
-
-<!-- Pohled: Nastavení -->
-<div id="settings-view" class="app-view">
-<h3>Uživatelé</h3>
-<div id="users-list"></div>
-<button class="ios-button" id="add-user-btn" style="margin-top: 10px;">Přidat uživatele</button>
-<hr style="border: 1px solid var(--border); margin: 20px 0;">
-
-<h3>Vzhled</h3>
-<div class="form-group">
-<label for="theme-select">Motiv</label>
-<select id="theme-select" class="ios-input">
-<option value="auto">Automatický</option>
-<option value="light">Světlý</option>
-<option value="dark">Tmavý</option>
-</select>
-</div>
-
-<h3>Notifikace a Haptika</h3>
-<div class="form-group">
-<label for="notifications-toggle">Notifikace</label>
-<select id="notifications-toggle" class="ios-input">
-<option value="true">Zapnuto</option>
-<option value="false">Vypnuto</option>
-</select>
-</div>
-<div class="form-group">
-<label for="haptics-toggle">Haptická odezva</label>
-<select id="haptics-toggle" class="ios-input">
-<option value="true">Zapnuto</option>
-<option value="false">Vypnuto</option>
-</select>
-</div>
-
-<h3>Obecné</h3>
-<div class="form-group">
-<label for="currency-select">Měna</label>
-<select id="currency-select" class="ios-input">
-<option value="CZK">CZK</option>
-<option value="EUR">EUR</option>
-<option value="USD">USD</option>
-</select>
-</div>
-
-<h3>Export</h3>
-<button class="ios-button" id="export-csv-btn">Exportovat do CSV</button>
-<button class="ios-button" id="export-pdf-btn" disabled style="margin-top: 10px;">Exportovat do PDF (připravuje se)</button>
-
-<hr style="border: 1px solid var(--border); margin: 20px 0;">
-
-<h3>Záloha a Obnova</h3>
-<button class="ios-button" id="backup-btn">Záloha / Obnova dat</button>
-
-<hr style="border: 1px solid var(--border); margin: 20px 0;">
-
-<h3>Nástroje pro vývojáře</h3>
-<button class="ios-button" id="demo-data-btn">Vytvořit demo data</button>
-<button class="ios-button danger" id="clear-data-btn" style="margin-top: 10px;">Smazat všechna data</button>
-<div id="diag-info" style="font-size: 12px; color: var(--muted); margin-top: 15px;"></div>
-</div>
-</main>
-
-<!-- FAB -->
-<button class="fab" id="fab" aria-label="Start timer">
-<!-- Ikona se mění dynamicky -->
-</button>
-</div>
-
-<!-- Toast kontejner -->
-<div id="toast-container"></div>
-
-<!-- Modální okna -->
-<div id="modal-container">
-<!-- Obsah modálů se generuje dynamicky -->
-</div>
-
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-'use strict';
-
-// -- Architektura a pořadí inicializace --
-// 1. App: Hlavní třída, která řídí celou aplikaci.
-// 2. StateManager: Spravuje stav aplikace (data) a ukládání do localStorage.
-// 3. UIManager: Stará se o vykreslování a aktualizaci DOM.
-// 4. PWA_Manager: Generuje ikony, manifest a registruje Service Worker.
-// 5. NotificationManager: Zpracovává oprávnění a posílání notifikací.
-// 6. EnhancedMobileFeatures: Zajišťuje haptickou odezvu.
-// 7. PullToRefreshManager: Implementuje funkci "potáhni pro obnovení".
-// 8. BackupManager: Řeší export, import a automatické zálohování dat.
-// 9. WakeLockManager: Udržuje obrazovku aktivní během měření.
-// 10. ChartManager: Vykresluje grafy na canvas.
-//
-// Inicializace probíhá v `App.init()`:
-// - Vytvoří instance všech manažerů.
-// - Vygeneruje PWA assety.
-// - Načte stav.
-// - Inicializuje komponenty a posluchače událostí.
-// - Vykreslí počáteční pohled.
-
-const DB_KEY = 'worktime_state_v2';
-const AUTO_BACKUP_KEY = 'worktime_auto_backup';
-
-/**
- * @class StateManager
- * @description Spravuje veškerý stav aplikace, včetně načítání a ukládání.
- */
-class StateManager {
-constructor() {
-this.state = null;
-this.saveStateThrottled = this.throttle(this.saveState.bind(this), 250);
-}
-
-getDefaultState() {
-return {
-users: [],
-activeUserId: null,
-timers: {},
-entries: [],
-settings: {
-theme: 'auto',
-currency: 'CZK',
-haptics: true,
-notifications: true,
-},
-lastBackupDateISO: null,
-schemaVersion: 2,
-};
-}
-
-// Schéma pro validaci
-EntrySchema = {
-id: 'string',
-userId: 'string',
-taskName: 'string',
-category: 'string_or_null',
-startAt: 'number',
-endAt: 'number',
-durationMs: 'number',
-rateAtTime: 'number',
-createdAt: 'number',
-updatedAt: 'number',
-history: 'array'
-};
-
-validate(data, schema) {
-if (typeof data !== 'object' || data === null) return false;
-for (const key in schema) {
-const type = schema[key];
-if (type.includes('_or_null') && (data[key] === null || data[key] === undefined)) continue;
-if (typeof data[key] !== type.replace('_or_null', '')) return false;
-}
-return true;
-}
-
-loadState() {
-try {
-const storedState = localStorage.getItem(DB_KEY);
-if (storedState) {
-this.state = JSON.parse(storedState);
-// Migrace schématu
-if (this.state.schemaVersion < 2) {
-this.state.entries.forEach(e => { e.history = []; });
-this.state.schemaVersion = 2;
-}
-} else {
-this.state = this.getDefaultState();
-this.createDefaultUser();
-}
-} catch (error) {
-console.error("Chyba při načítání stavu:", error);
-this.state = this.getDefaultState();
-this.createDefaultUser();
-}
-return this.state;
-}
-
-saveState() {
-try {
-localStorage.setItem(DB_KEY, JSON.stringify(this.state));
-} catch (error) {
-console.error("Chyba při ukládání stavu:", error);
-}
-}
-
-createDefaultUser() {
-const newUser = {
-id: this.generateId(),
-name: 'Marty',
-rate: 400,
-color: '#39D353',
-icon: 'M',
-active: true
-};
-this.state.users.push(newUser);
-this.state.activeUserId = newUser.id;
-this.saveStateThrottled();
-}
-
-getState() { return this.state; }
-setState(newState, shouldSave = true) {
-this.state = { ...this.state, ...newState };
-if (shouldSave) {
-this.saveStateThrottled();
-}
-}
-
-getActiveUser() {
-return this.state.users.find(u => u.id === this.state.activeUserId);
-}
-
-getTimerForUser(userId) {
-if (!this.state.timers[userId]) {
-this.state.timers[userId] = { running: false, startAt: null, pausedAccumMs: 0, currentTaskName: '' };
-}
-return this.state.timers[userId];
-}
-
-addEntry(entryData) {
-const newEntry = {
-id: this.generateId(),
-category: null,
-createdAt: Date.now(),
-updatedAt: Date.now(),
-history: [],
-...entryData
-};
-if (!this.validate(newEntry, this.EntrySchema)) {
-console.error("Nevalidní záznam:", newEntry);
-return;
-}
-this.state.entries.push(newEntry);
-this.saveStateThrottled();
-}
-
-updateEntry(entryId, updates) {
-const entryIndex = this.state.entries.findIndex(e => e.id === entryId);
-if (entryIndex === -1) return;
-
-const originalEntry = { ...this.state.entries[entryIndex] };
-const updatedEntry = { ...originalEntry, ...updates, updatedAt: Date.now() };
-
-const changes = {};
-for (const key in updates) {
-if (originalEntry[key] !== updatedEntry[key]) {
-changes[key] = { from: originalEntry[key], to: updatedEntry[key] };
-}
-}
-
-if (Object.keys(changes).length > 0) {
-updatedEntry.history.push({ ts: Date.now(), changes });
-}
-
-this.state.entries[entryIndex] = updatedEntry;
-this.saveStateThrottled();
-}
-
-deleteEntry(entryId) {
-const entry = this.state.entries.find(e => e.id === entryId);
-if (!entry) return null;
-
-this.state.entries = this.state.entries.filter(e => e.id !== entryId);
-this.saveStateThrottled();
-return entry;
-}
-
-reAddEntry(entry) {
-this.state.entries.push(entry);
-// Není potřeba sort, ale v reálné app ano
-this.saveStateThrottled();
-}
-
-generateId() {
-return Date.now().toString(36) + Math.random().toString(36).substring(2);
-}
-
-throttle(func, limit) {
-let inThrottle;
-return function() {
-const args = arguments;
-const context = this;
-if (!inThrottle) {
-func.apply(context, args);
-inThrottle = true;
-setTimeout(() => inThrottle = false, limit);
-}
-}
-}
-}
-
-/**
- * @class PWA_Manager
- * @description Stará se o generování PWA assetů a registraci Service Workeru.
- */
-class PWA_Manager {
-constructor() {
-this.accentColor = '#39D353';
-this.bgColor = '#0D1117';
-}
-
-async init() {
-this.generateIcons();
-this.generateManifest();
-this.registerServiceWorker();
-}
-
-generateIcons() {
-const canvas = document.createElement('canvas');
-const ctx = canvas.getContext('2d');
-const size = 180;
-canvas.width = size;
-canvas.height = size;
-
-// Pozadí
-ctx.fillStyle = this.bgColor;
-ctx.fillRect(0, 0, size, size);
-
-// Ciferník
-ctx.strokeStyle = '#FFFFFF';
-ctx.lineWidth = 10;
-ctx.beginPath();
-ctx.arc(size / 2, size / 2, size * 0.4, 0, 2 * Math.PI);
-ctx.stroke();
-
-// Střed
-ctx.fillStyle = '#FFFFFF';
-ctx.beginPath();
-ctx.arc(size / 2, size / 2, 8, 0, 2 * Math.PI);
-ctx.fill();
-
-// Ručičky
-ctx.strokeStyle = '#FFFFFF';
-ctx.lineWidth = 8;
-ctx.beginPath();
-ctx.moveTo(size / 2, size / 2);
-ctx.lineTo(size / 2, size * 0.25);
-ctx.stroke();
-
-ctx.strokeStyle = this.accentColor;
-ctx.lineWidth = 8;
-ctx.beginPath();
-ctx.moveTo(size / 2, size / 2);
-ctx.lineTo(size * 0.7, size / 2);
-ctx.stroke();
-
-const pngUrl = canvas.toDataURL('image/png');
-this.addLink('apple-touch-icon', pngUrl);
-
-// Favicon (menší verze)
-const favCanvas = document.createElement('canvas');
-const favCtx = favCanvas.getContext('2d');
-const favSize = 32;
-favCanvas.width = favSize;
-favCanvas.height = favSize;
-favCtx.drawImage(canvas, 0, 0, favSize, favSize);
-const favUrl = favCanvas.toDataURL('image/x-icon');
-this.addLink('icon', favUrl, 'image/x-icon');
-}
-
-generateManifest() {
-const manifest = {
-name: 'WorkTime Tracker',
-short_name: 'WorkTime',
-start_url: '.',
-display: 'standalone',
-background_color: this.bgColor,
-theme_color: this.bgColor,
-description: 'Jednoduchý a efektivní sledovač pracovní doby.',
-icons: [{
-src: document.querySelector('link[rel="apple-touch-icon"]').href,
-sizes: '180x180',
-type: 'image/png'
-}]
-};
-const manifestBlob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
-const manifestUrl = URL.createObjectURL(manifestBlob);
-this.addLink('manifest', manifestUrl);
-}
-
-registerServiceWorker() {
-if ('serviceWorker' in navigator) {
-const swContent = `
-const CACHE_NAME = 'worktime-cache-v1';
-const urlsToCache = [
-'/',
-'/index.html' // V single-file app je toto klíčové
-];
-self.addEventListener('install', event => {
-event.waitUntil(
-caches.open(CACHE_NAME).then(cache => cache.addAll(urlsToCache))
-);
-});
-self.addEventListener('fetch', event => {
-event.respondWith(
-caches.open(CACHE_NAME).then(cache => {
-return cache.match(event.request).then(response => {
-const fetchPromise = fetch(event.request).then(networkResponse => {
-if (event.request.method === 'GET') {
-cache.put(event.request, networkResponse.clone());
-}
-return networkResponse;
-});
-return response || fetchPromise;
-});
-})
-);
-});
-`;
-const swBlob = new Blob([swContent], { type: 'application/javascript' });
-const swUrl = URL.createObjectURL(swBlob);
-
-navigator.serviceWorker.register(swUrl)
-.then(reg => console.log('Service Worker registered.', reg))
-.catch(err => console.error('Service Worker registration failed:', err));
-}
-}
-
-addLink(rel, href, type = null) {
-const link = document.createElement('link');
-link.rel = rel;
-link.href = href;
-if (type) link.type = type;
-document.head.appendChild(link);
-}
-}
-
-/**
- * @class NotificationManager
- * @description Spravuje oprávnění a posílání notifikací.
- */
-class NotificationManager {
-constructor() {
-this.permission = 'default';
-}
-
-async init() {
-if (!('Notification' in window)) {
-console.warn('This browser does not support desktop notification');
-return;
-}
-this.permission = Notification.permission;
-}
-
-async requestPermission() {
-if (this.permission === 'default') {
-this.permission = await Notification.requestPermission();
-}
-return this.permission === 'granted';
-}
-
-notify(title, body, options = {}) {
-if (this.permission !== 'granted') {
-console.log('Notification permission not granted.');
-return;
-}
-const finalOptions = {
-body,
-icon: document.querySelector('link[rel="apple-touch-icon"]').href,
-...options
-};
-new Notification(title, finalOptions);
-}
-}
-
-/**
- * @class EnhancedMobileFeatures
- * @description Poskytuje haptickou odezvu.
- */
-class EnhancedMobileFeatures {
-vibrate(type = 'light') {
-if ('vibrate' in navigator) {
-let pattern;
-switch (type) {
-case 'light': pattern = [50]; break;
-case 'medium': pattern = [100]; break;
-case 'heavy': pattern = [200]; break;
-case 'success': pattern = [50, 50, 100]; break;
-case 'error': pattern = [100, 50, 100]; break;
-default: pattern = [50];
-}
-try {
-navigator.vibrate(pattern);
-} catch (e) {
-// iOS může vyhodit chybu, pokud je voláno příliš často
-}
-}
-}
-}
-
-/**
- * @class PullToRefreshManager
- * @description Implementuje "potáhni pro obnovení".
- */
-class PullToRefreshManager {
-constructor(element, onRefresh) {
-this.element = element;
-this.onRefresh = onRefresh;
-this.indicator = document.getElementById('pull-to-refresh-indicator');
-this.touchStartY = 0;
-this.isRefreshing = false;
-this.threshold = 80;
-this.init();
-}
-
-init() {
-this.element.addEventListener('touchstart', this.handleTouchStart.bind(this), { passive: true });
-this.element.addEventListener('touchmove', this.handleTouchMove.bind(this), { passive: false });
-this.element.addEventListener('touchend', this.handleTouchEnd.bind(this), { passive: true });
-}
-
-handleTouchStart(e) {
-if (this.element.scrollTop === 0 && !this.isRefreshing) {
-this.touchStartY = e.touches[0].clientY;
-}
-}
-
-handleTouchMove(e) {
-if (this.element.scrollTop === 0 && this.touchStartY > 0 && !this.isRefreshing) {
-const currentY = e.touches[0].clientY;
-const diff = currentY - this.touchStartY;
-
-if (diff > 0) {
-e.preventDefault();
-this.indicator.style.opacity = Math.min(1, diff / this.threshold);
-this.element.style.transform = `translateY(${Math.min(diff, this.threshold * 1.5)}px)`;
-if (diff > this.threshold) {
-this.indicator.classList.add('ready');
-} else {
-this.indicator.classList.remove('ready');
-}
-}
-}
-}
-
-handleTouchEnd() {
-if (this.isRefreshing || this.touchStartY === 0) return;
-
-const currentY = parseFloat(this.element.style.transform.replace('translateY(', ''));
-this.element.style.transition = 'transform 0.3s ease';
-this.element.style.transform = 'translateY(0)';
-
-if (currentY > this.threshold) {
-this.isRefreshing = true;
-this.indicator.classList.add('refreshing');
-this.indicator.classList.remove('ready');
-this.indicator.style.opacity = '1';
-
-setTimeout(() => {
-this.onRefresh().then(() => {
-this.reset();
-});
-}, 1000); // Úmyslná prodleva
-} else {
-this.indicator.style.opacity = '0';
-}
-
-this.touchStartY = 0;
-setTimeout(() => {
-this.element.style.transition = '';
-}, 300);
-}
-
-reset() {
-this.isRefreshing = false;
-this.indicator.classList.remove('refreshing');
-this.indicator.style.opacity = '0';
-}
-}
-
-/**
- * @class BackupManager
- * @description Řeší export, import a automatické zálohování.
- */
-class BackupManager {
-constructor(stateManager) {
-this.stateManager = stateManager;
-}
-
-autoBackup() {
-const today = new Date().toISOString().split('T')[0];
-const lastBackup = this.stateManager.getState().lastBackupDateISO;
-
-if (today !== lastBackup) {
-console.log('Provádění denní automatické zálohy...');
-const stateToBackup = this.stateManager.getState();
-localStorage.setItem(AUTO_BACKUP_KEY, JSON.stringify(stateToBackup));
-this.stateManager.setState({ lastBackupDateISO: today });
-}
-}
-
-exportToJSON() {
-const data = JSON.stringify(this.stateManager.getState(), null, 2);
-const blob = new Blob([data], { type: 'application/json' });
-const url = URL.createObjectURL(blob);
-const a = document.createElement('a');
-const date = new Date().toISOString().split('T')[0];
-a.href = url;
-a.download = `worktime-backup-${date}.json`;
-document.body.appendChild(a);
-a.click();
-document.body.removeChild(a);
-URL.revokeObjectURL(url);
-}
-
-importFromJSON(file) {
-return new Promise((resolve, reject) => {
-const reader = new FileReader();
-reader.onload = (e) => {
-try {
-const importedState = JSON.parse(e.target.result);
-// Validace
-if (importedState.users && importedState.entries) {
-// Merge místo replace
-const currentState = this.stateManager.getState();
-importedState.entries.forEach(impEntry => {
-if (!currentState.entries.some(e => e.id === impEntry.id)) {
-currentState.entries.push(impEntry);
-}
-});
-importedState.users.forEach(impUser => {
-if (!currentState.users.some(u => u.id === impUser.id)) {
-currentState.users.push(impUser);
-}
-});
-this.stateManager.state = { ...currentState, ...importedState };
-this.stateManager.saveState();
-resolve();
-} else {
-reject(new Error('Neplatný formát souboru.'));
-}
-} catch (err) {
-reject(new Error('Chyba při parsování souboru.'));
-}
-};
-reader.onerror = () => reject(new Error('Chyba při čtení souboru.'));
-reader.readAsText(file);
-});
-}
-}
-
-/**
- * @class WakeLockManager
- * @description Udržuje obrazovku aktivní.
- */
-class WakeLockManager {
-constructor() {
-this.wakeLock = null;
-document.addEventListener('visibilitychange', this.handleVisibilityChange.bind(this));
-}
-
-async request() {
-if ('wakeLock' in navigator) {
-try {
-this.wakeLock = await navigator.wakeLock.request('screen');
-this.wakeLock.addEventListener('release', () => {
-console.log('Wake Lock byl uvolněn.');
-});
-console.log('Wake Lock je aktivní.');
-} catch (err) {
-console.error(`${err.name}, ${err.message}`);
-}
-}
-}
-
-async release() {
-if (this.wakeLock !== null) {
-await this.wakeLock.release();
-this.wakeLock = null;
-}
-}
-
-handleVisibilityChange() {
-if (this.wakeLock !== null && document.visibilityState === 'visible') {
-this.request();
-}
-}
-}
-
-/**
- * @class ChartManager
- * @description Vykresluje grafy pomocí Canvas API.
- */
-class ChartManager {
-constructor(stateManager) {
-this.stateManager = stateManager;
-this.timeChartCtx = document.getElementById('time-chart').getContext('2d');
-this.earningsChartCtx = document.getElementById('earnings-chart').getContext('2d');
-this.heatmapCtx = document.getElementById('heatmap-chart').getContext('2d');
-}
-
-renderAllCharts() {
-this.renderTimeChart();
-this.renderEarningsChart(); // Dokončeno jako TODO v fázi 1
-this.renderHeatmap();
-}
-
-renderTimeChart() {
-const ctx = this.timeChartCtx;
-const canvas = ctx.canvas;
-ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-const data = this.getWeeklyTimeData();
-const labels = Object.keys(data);
-const values = Object.values(data);
-const maxValue = Math.max(1, ...values);
-
-const barWidth = canvas.width / (labels.length * 2);
-const scale = (canvas.height - 20) / maxValue;
-
-ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--text').trim();
-ctx.font = '12px sans-serif';
-
-labels.forEach((label, i) => {
-const barHeight = values[i] * scale;
-const x = (i * 2 + 0.5) * barWidth;
-const y = canvas.height - barHeight - 15;
-
-ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
-ctx.fillRect(x, y, barWidth, barHeight);
-
-ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--text').trim();
-ctx.fillText(label, x + barWidth / 2 - 10, canvas.height - 5);
-});
-}
-
-renderEarningsChart() {
-// Fáze 1 vylepšení: Implementace koláčového grafu podle kategorií
-const ctx = this.earningsChartCtx;
-const canvas = ctx.canvas;
-ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-// TODO: Přidat data z kategorií a vykreslit pie chart
-ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--text').trim();
-ctx.font = '14px sans-serif';
-ctx.fillText('Připravuje se...', canvas.width / 2 - 50, canvas.height / 2);
-}
-
-renderHeatmap() {
-const ctx = this.heatmapCtx;
-const canvas = ctx.canvas;
-ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-const data = this.getHeatmapData(); // 7 dnů x 24 hodin
-const days = ['Ne', 'Po', 'Út', 'St', 'Čt', 'Pá', 'So'];
-const cellWidth = (canvas.width - 30) / 24;
-const cellHeight = (canvas.height - 30) / 7;
-
-const maxIntensity = Math.max(1, ...data.flat());
-
-for (let day = 0; day < 7; day++) {
-for (let hour = 0; hour < 24; hour++) {
-const intensity = data[day][hour] / maxIntensity;
-ctx.fillStyle = `rgba(57, 211, 83, ${intensity})`;
-ctx.fillRect(30 + hour * cellWidth, day * cellHeight, cellWidth -1, cellHeight -1);
-}
-}
-
-ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--text').trim();
-ctx.font = '10px sans-serif';
-days.forEach((day, i) => {
-ctx.fillText(day, 5, i * cellHeight + cellHeight / 2);
-});
-for (let hour = 0; hour < 24; hour += 3) {
-ctx.fillText(`${hour}`, 30 + hour * cellWidth, canvas.height - 5);
-}
-}
-
-getWeeklyTimeData() {
-const entries = this.stateManager.getState().entries;
-const user = this.stateManager.getActiveUser();
-if (!user) return {};
-
-const data = { 'Po': 0, 'Út': 0, 'St': 0, 'Čt': 0, 'Pá': 0, 'So': 0, 'Ne': 0 };
-const today = new Date();
-const startOfWeek = new Date(today);
-startOfWeek.setDate(today.getDate() - (today.getDay() + 6) % 7);
-startOfWeek.setHours(0,0,0,0);
-
-const endOfWeek = new Date(startOfWeek);
-endOfWeek.setDate(startOfWeek.getDate() + 7);
-
-entries
-.filter(e => e.userId === user.id && e.startAt >= startOfWeek.getTime() && e.startAt < endOfWeek.getTime())
-.forEach(e => {
-const dayIndex = (new Date(e.startAt).getDay() + 6) % 7; // Po = 0
-const dayKey = Object.keys(data)[dayIndex];
-data[dayKey] += e.durationMs / (1000 * 60 * 60); // v hodinách
-});
-return data;
-}
-
-getHeatmapData() {
-const entries = this.stateManager.getState().entries;
-const user = this.stateManager.getActiveUser();
-if (!user) return Array(7).fill(0).map(() => Array(24).fill(0));
-
-const data = Array(7).fill(0).map(() => Array(24).fill(0));
-
-entries
-.filter(e => e.userId === user.id)
-.forEach(e => {
-const start = new Date(e.startAt);
-const end = new Date(e.endAt);
-
-let current = new Date(start);
-while(current < end) {
-const day = current.getDay(); // Ne = 0
-const hour = current.getHours();
-data[day][hour] += 1;
-current.setHours(current.getHours() + 1);
-}
-});
-return data;
-}
-}
-
-/**
- * @class UIManager
- * @description Zpracovává veškeré vykreslování a interakce s DOM.
- */
-class UIManager {
-constructor(app) {
-this.app = app;
-this.stateManager = app.stateManager;
-this.mobileFeatures = app.mobileFeatures;
-this.elements = {
-appContainer: document.getElementById('app-container'),
-userSwitcher: document.getElementById('user-switcher'),
-userAvatar: document.getElementById('user-avatar'),
-userName: document.getElementById('user-name'),
-summaryTime: document.getElementById('summary-time'),
-summaryEarnings: document.getElementById('summary-earnings'),
-navTabs: document.getElementById('nav-tabs'),
-navIndicator: document.getElementById('nav-indicator'),
-mainContent: document.querySelector('.main-content'),
-views: document.querySelectorAll('.app-view'),
-timerView: document.getElementById('timer-view'),
-timerTime: document.getElementById('timer-time'),
-timerEarnings: document.getElementById('timer-earnings'),
-timerTask: document.getElementById('timer-task'),
-timerControls: document.getElementById('timer-controls'),
-entriesView: document.getElementById('entries-view'),
-entriesList: document.getElementById('entries-list'),
-searchInput: document.getElementById('search-input'),
-statsView: document.getElementById('stats-view'),
-settingsView: document.getElementById('settings-view'),
-fab: document.getElementById('fab'),
-modalContainer: document.getElementById('modal-container'),
-toastContainer: document.getElementById('toast-container'),
-themeSelect: document.getElementById('theme-select'),
-currencySelect: document.getElementById('currency-select'),
-usersList: document.getElementById('users-list'),
-addUserBtn: document.getElementById('add-user-btn'),
-exportCsvBtn: document.getElementById('export-csv-btn'),
-backupBtn: document.getElementById('backup-btn'),
-demoDataBtn: document.getElementById('demo-data-btn'),
-clearDataBtn: document.getElementById('clear-data-btn'),
-diagInfo: document.getElementById('diag-info'),
-notificationsToggle: document.getElementById('notifications-toggle'),
-hapticsToggle: document.getElementById('haptics-toggle'),
-};
-this.activeView = 'timer-view';
-this.searchDebounced = this.debounce(this.renderEntries.bind(this), 300);
-}
-
-initEventListeners() {
-this.elements.navTabs.addEventListener('click', e => this.handleNavClick(e));
-this.elements.fab.addEventListener('click', () => this.handleFabClick());
-this.elements.themeSelect.addEventListener('change', e => this.handleThemeChange(e.target.value));
-this.elements.currencySelect.addEventListener('change', e => this.handleCurrencyChange(e.target.value));
-this.elements.addUserBtn.addEventListener('click', () => this.showUserModal());
-this.elements.searchInput.addEventListener('input', () => this.searchDebounced());
-this.elements.exportCsvBtn.addEventListener('click', () => this.app.exportCSV());
-this.elements.backupBtn.addEventListener('click', () => this.showBackupModal());
-this.elements.demoDataBtn.addEventListener('click', () => this.app.generateDemoData());
-this.elements.clearDataBtn.addEventListener('click', () => this.app.clearAllData());
-this.elements.notificationsToggle.addEventListener('change', e => this.handleNotificationsChange(e.target.value));
-this.elements.hapticsToggle.addEventListener('change', e => this.handleHapticsChange(e.target.value));
-
-window.addEventListener('keydown', e => this.handleKeyPress(e));
-}
-
-handleNotificationsChange(value) {
-const enabled = value === 'true';
-this.stateManager.setState({ settings: { ...this.stateManager.getState().settings, notifications: enabled } });
-if (enabled) this.app.notificationManager.requestPermission();
-}
-
-handleHapticsChange(value) {
-const enabled = value === 'true';
-this.stateManager.setState({ settings: { ...this.stateManager.getState().settings, haptics: enabled } });
-}
-
-handleKeyPress(e) {
-if (e.code === 'Space' && this.activeView === 'timer-view' && !(e.target instanceof HTMLInputElement)) {
-e.preventDefault();
-this.handleFabClick();
-}
-if ((e.metaKey || e.ctrlKey) && e.key === 'f') {
-e.preventDefault();
-this.switchView('entries-view');
-this.elements.searchInput.focus();
-}
-}
-
-updateFullUI() {
-this.updateHeader();
-this.updateTimerDisplay();
-this.updateFab();
-this.renderEntries();
-this.renderUsersList();
-this.applyTheme(this.stateManager.getState().settings.theme);
-this.elements.currencySelect.value = this.stateManager.getState().settings.currency;
-this.elements.notificationsToggle.value = this.stateManager.getState().settings.notifications ? 'true' : 'false';
-this.elements.hapticsToggle.value = this.stateManager.getState().settings.haptics ? 'true' : 'false';
-this.updateDiagnostics();
-if(this.activeView === 'stats-view') {
-this.app.chartManager.renderAllCharts();
-}
-}
-
-updateHeader() {
-const user = this.stateManager.getActiveUser();
-const state = this.stateManager.getState();
-if (!user) {
-this.elements.userName.textContent = 'Žádný uživatel';
-this.elements.userAvatar.style.backgroundColor = 'grey';
-this.elements.userAvatar.textContent = '?';
-return;
-}
-
-this.elements.userName.textContent = user.name;
-this.elements.userAvatar.style.backgroundColor = user.color;
-this.elements.userAvatar.textContent = user.icon;
-
-const todayEntries = state.entries.filter(e => {
-const entryDate = new Date(e.startAt);
-const today = new Date();
-return e.userId === user.id &&
-entryDate.getDate() === today.getDate() &&
-entryDate.getMonth() === today.getMonth() &&
-entryDate.getFullYear() === today.getFullYear();
-});
-
-const totalMsToday = todayEntries.reduce((sum, e) => sum + e.durationMs, 0);
-const totalEarningsToday = todayEntries.reduce((sum, e) => sum + (e.durationMs / 3600000) * e.rateAtTime, 0);
-
-this.elements.summaryTime.textContent = this.formatDuration(totalMsToday);
-this.elements.summaryEarnings.textContent = `${totalEarningsToday.toFixed(2)} ${state.settings.currency}`;
-}
-
-updateTimerDisplay() {
-const user = this.stateManager.getActiveUser();
-if (!user) return;
-const timer = this.stateManager.getTimerForUser(user.id);
-const state = this.stateManager.getState();
-
-let elapsedMs = timer.pausedAccumMs;
-if (timer.running && timer.startAt) {
-elapsedMs += Date.now() - timer.startAt;
-}
-
-this.elements.timerTime.textContent = this.formatDuration(elapsedMs);
-const earnings = (elapsedMs / 3600000) * user.rate;
-this.elements.timerEarnings.textContent = `${earnings.toFixed(2)} ${state.settings.currency}`;
-this.elements.timerTask.textContent = timer.currentTaskName || 'Žádný aktivní úkol';
-
-this.renderTimerControls(timer);
-}
-
-renderTimerControls(timer) {
-this.elements.timerControls.innerHTML = '';
-if (timer.running) {
-const pauseBtn = document.createElement('button');
-pauseBtn.className = 'ios-button';
-pauseBtn.textContent = 'Pauza';
-pauseBtn.onclick = () => this.app.pauseTimer();
-this.elements.timerControls.appendChild(pauseBtn);
-} else if (timer.pausedAccumMs > 0) {
-const resumeBtn = document.createElement('button');
-resumeBtn.className = 'ios-button primary';
-resumeBtn.textContent = 'Pokračovat';
-resumeBtn.onclick = () => this.app.resumeTimer();
-this.elements.timerControls.appendChild(resumeBtn);
-} else {
-const retroBtn = document.createElement('button');
-retroBtn.className = 'ios-button';
-retroBtn.textContent = 'Spustit zpětně';
-retroBtn.onclick = () => this.showRetroStartModal();
-this.elements.timerControls.appendChild(retroBtn);
-}
-}
-
-updateFab() {
-const user = this.stateManager.getActiveUser();
-if (!user) {
-this.elements.fab.style.display = 'none';
-return;
-}
-this.elements.fab.style.display = 'flex';
-
-const timer = this.stateManager.getTimerForUser(user.id);
-let icon, label;
-
-switch (this.activeView) {
-case 'timer-view':
-if (timer.running) {
-icon = this.getIconSVG('stop');
-label = 'Zastavit měření';
-} else {
-icon = this.getIconSVG('play');
-label = 'Spustit měření';
-}
-break;
-case 'entries-view':
-icon = this.getIconSVG('add');
-label = 'Přidat záznam ručně';
-break;
-case 'settings-view':
-icon = this.getIconSVG('addUser');
-label = 'Přidat nového uživatele';
-break;
-default:
-icon = '';
-label = '';
-this.elements.fab.style.display = 'none';
-}
-
-this.elements.fab.innerHTML = icon;
-this.elements.fab.setAttribute('aria-label', label);
-}
-
-getIconSVG(name) {
-const color = 'currentColor';
-switch(name) {
-case 'play': return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="${color}" width="28px" height="28px"><path d="M8 5v14l11-7z"/></svg>`;
-case 'stop': return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="${color}" width="28px" height="28px"><path d="M6 6h12v12H6z"/></svg>`;
-case 'add': return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="${color}" width="28px" height="28px"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>`;
-case 'addUser': return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="${color}" width="28px" height="28px"><path d="M15 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm-9-2V7H4v3H1v2h3v3h2v-3h3v-2H6zm9 4c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>`;
-case 'edit': return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="${color}" width="20px" height="20px"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>`;
-case 'delete': return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="${color}" width="20px" height="20px"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>`;
-default: return '';
-}
-}
-
-handleNavClick(e) {
-const segment = e.target.closest('.ios-segment');
-if (!segment) return;
-
-if (this.stateManager.getState().settings.haptics) this.mobileFeatures.vibrate('light');
-this.switchView(segment.dataset.view);
-}
-
-switchView(viewId) {
-this.activeView = viewId;
-
-const segments = [...this.elements.navTabs.querySelectorAll('.ios-segment')];
-segments.forEach((s, i) => {
-if (s.dataset.view === viewId) {
-s.classList.add('active');
-this.elements.navIndicator.style.transform = `translateX(${i * 100}%)`;
-} else {
-s.classList.remove('active');
-}
-});
-
-this.elements.views.forEach(view => {
-view.classList.toggle('active', view.id === viewId);
-});
-
-if (viewId === 'stats-view') {
-this.app.chartManager.renderAllCharts();
-}
-
-this.updateFab();
-}
-
-handleFabClick() {
-if (this.stateManager.getState().settings.haptics) this.mobileFeatures.vibrate('medium');
-switch (this.activeView) {
-case 'timer-view':
-this.app.toggleTimer();
-break;
-case 'entries-view':
-this.showEntryModal();
-break;
-case 'settings-view':
-this.showUserModal();
-break;
-}
-}
-
-handleThemeChange(theme) {
-this.stateManager.setState({ settings: { ...this.stateManager.getState().settings, theme } });
-this.applyTheme(theme);
-}
-
-applyTheme(theme) {
-document.documentElement.classList.remove('theme-light', 'theme-dark');
-if (theme === 'light' || theme === 'dark') {
-document.documentElement.classList.add(`theme-${theme}`);
-}
-this.elements.themeSelect.value = theme;
-}
-
-handleCurrencyChange(currency) {
-this.stateManager.setState({ settings: { ...this.stateManager.getState().settings, currency } });
-this.updateFullUI();
-}
-
-renderEntries() {
-const state = this.stateManager.getState();
-const user = this.stateManager.getActiveUser();
-if (!user) {
-this.elements.entriesList.innerHTML = '<p>Žádný aktivní uživatel.</p>';
-return;
-}
-
-const searchTerm = this.elements.searchInput.value.toLowerCase();
-
-const filteredEntries = state.entries
-.filter(e => e.userId === user.id)
-.filter(e => e.taskName.toLowerCase().includes(searchTerm))
-.sort((a, b) => b.startAt - a.startAt);
-
-if (filteredEntries.length === 0) {
-this.elements.entriesList.innerHTML = '<p style="text-align:center; color: var(--muted);">Žádné záznamy k zobrazení.</p>';
-return;
-}
-
-// Jednoduchá virtualizace (Fáze 1 vylepšení): Renderovat jen viditelné položky
-// TODO: Implementovat plnou windowing pro velké seznamy
-
-this.elements.entriesList.innerHTML = filteredEntries.map(entry => this.createEntryHTML(entry)).join('');
-this.addSwipeListeners();
-}
-
-createEntryHTML(entry) {
-const currency = this.stateManager.getState().settings.currency;
-const earnings = (entry.durationMs / 3600000) * entry.rateAtTime;
-const start = new Date(entry.startAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-const end = new Date(entry.endAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-const date = new Date(entry.startAt).toLocaleDateString();
-
-return `
-<div class="entry-item" data-id="${entry.id}" role="listitem" tabindex="0">
-<div class="swipe-actions">
-<div class="swipe-action edit" data-action="edit" aria-label="Upravit">${this.getIconSVG('edit')}</div>
-<div class="swipe-action delete" data-action="delete" aria-label="Smazat">${this.getIconSVG('delete')}</div>
-</div>
-<div class="entry-item-content">
-<div>
-<div class="entry-task">${entry.taskName}</div>
-<div class="entry-details">${date} • ${start} - ${end}</div>
-</div>
-<div class="entry-time-info" style="text-align:right;">
-<div class="duration">${this.formatDuration(entry.durationMs, false)}</div>
-<div class="earnings">${earnings.toFixed(2)} ${currency}</div>
-</div>
-</div>
-</div>
-`;
-}
-
-addSwipeListeners() {
-const items = this.elements.entriesList.querySelectorAll('.entry-item');
-items.forEach(item => {
-let startX, currentX, isSwiping = false;
-
-item.addEventListener('touchstart', e => {
-startX = e.touches[0].clientX;
-isSwiping = true;
-}, { passive: true });
-
-item.addEventListener('touchmove', e => {
-if (!isSwiping) return;
-currentX = e.touches[0].clientX;
-const diff = currentX - startX;
-if (diff < 0 && diff > -150) { // Swipe left
-item.querySelector('.entry-item-content').style.transform = `translateX(${diff}px)`;
-}
-}, { passive: true });
-
-item.addEventListener('touchend', () => {
-if (!isSwiping) return;
-isSwiping = false;
-const diff = currentX - startX;
-const content = item.querySelector('.entry-item-content');
-content.style.transition = 'transform 0.3s ease';
-if (diff < -60) { // Threshold
-item.classList.add('swiped');
-content.style.transform = 'translateX(-140px)';
-if (this.stateManager.getState().settings.haptics) this.mobileFeatures.vibrate('light');
-} else {
-item.classList.remove('swiped');
-content.style.transform = 'translateX(0)';
-}
-setTimeout(() => content.style.transition = '', 300);
-startX = 0; currentX = 0;
-});
-
-item.querySelector('.swipe-action.edit').addEventListener('click', () => {
-if (this.stateManager.getState().settings.haptics) this.mobileFeatures.vibrate('medium');
-this.showEntryModal(item.dataset.id);
-});
-item.querySelector('.swipe-action.delete').addEventListener('click', () => {
-if (this.stateManager.getState().settings.haptics) this.mobileFeatures.vibrate('heavy');
-this.app.deleteEntryWithUndo(item.dataset.id);
-});
-});
-}
-
-renderUsersList() {
-const state = this.stateManager.getState();
-this.elements.usersList.innerHTML = state.users.map(user => `
-<div class="entry-item" style="cursor:pointer;" data-user-id="${user.id}" role="button" tabindex="0">
-<div>
-<div class="entry-task">${user.name}</div>
-<div class="entry-details">${user.rate} ${state.settings.currency}/hod</div>
-</div>
-<div style="background-color:${user.color}; width:20px; height:20px; border-radius:50%;"></div>
-</div>
-`).join('');
-
-this.elements.usersList.querySelectorAll('.entry-item').forEach(item => {
-item.addEventListener('click', () => {
-if (this.stateManager.getState().settings.haptics) this.mobileFeatures.vibrate('light');
-this.showUserModal(item.dataset.userId);
-});
-});
-}
-
-showModal(title, contentHTML) {
-const modalId = `modal-${Date.now()}`;
-const modalHTML = `
-<div class="modal-overlay visible" id="${modalId}" role="dialog" aria-modal="true">
-<div class="modal-content">
-<div class="modal-header">
-<h2 class="modal-title">${title}</h2>
-<button class="close-modal-btn" aria-label="Zavřít">×</button>
-</div>
-${contentHTML}
-</div>
-</div>
-`;
-this.elements.modalContainer.insertAdjacentHTML('beforeend', modalHTML);
-
-const modal = document.getElementById(modalId);
-const closeModal = () => {
-modal.classList.remove('visible');
-setTimeout(() => modal.remove(), 300);
-};
-
-modal.querySelector('.close-modal-btn').onclick = closeModal;
-modal.onclick = (e) => {
-if (e.target === modal) closeModal();
-};
-
-return modal;
-}
-
-closeAllModals() {
-this.elements.modalContainer.querySelectorAll('.modal-overlay').forEach(modal => {
-modal.classList.remove('visible');
-setTimeout(() => modal.remove(), 300);
-});
-}
-
-parseDurationInput(input) {
-// Parser pro formáty: 2:30, 150, 3h15m, 0830–1210, +45m, 2,5h
-input = input.trim();
-if (/^\d+:\d+$/.test(input)) { // 2:30
-const [h, m] = input.split(':').map(Number);
-return (h * 60 + m) * 60000;
-} else if (/^\d+$/.test(input)) { // 150 (minuty)
-return parseInt(input) * 60000;
-} else if (/^(\d+)h(\d+)m$/.test(input)) { // 3h15m
-const [, h, m] = input.match(/^(\d+)h(\d+)m$/);
-return (parseInt(h) * 60 + parseInt(m)) * 60000;
-} else if (/^\d{4}–\d{4}$/.test(input)) { // 0830–1210
-const [start, end] = input.split('–').map(t => parseInt(t.slice(0,2)) * 60 + parseInt(t.slice(2)));
-return (end - start) * 60000;
-} else if (/^\+\d+m$/.test(input)) { // +45m
-return parseInt(input.slice(1, -1)) * 60000;
-} else if (/^[\d,]+h$/.test(input)) { // 2,5h
-const h = parseFloat(input.replace(',', '.').slice(0, -1));
-return h * 3600000;
-}
-return 0; // Invalid
-}
-
-showEntryModal(entryId = null) {
-const entry = entryId ? this.stateManager.getState().entries.find(e => e.id === entryId) : null;
-const title = entry ? 'Upravit záznam' : 'Přidat ruční záznam';
-const user = this.stateManager.getActiveUser();
-
-const content = `
-<form id="entry-form">
-<div class="form-group">
-<label for="taskName">Název úkolu</label>
-<input type="text" id="taskName" class="ios-input" value="${entry?.taskName || ''}" required>
-</div>
-<div class="form-group">
-<label for="durationInput">Doba trvání (např. 2:30, 3h15m, 150)</label>
-<input type="text" id="durationInput" class="ios-input" placeholder="Zadejte dobu" value="${entry ? this.formatDuration(entry.durationMs, false) : ''}">
-</div>
-<div class="form-group">
-<label for="startTime">Čas začátku (HH:MM)</label>
-<input type="time" id="startTime" class="ios-input" value="${entry ? this.formatTimeForInput(entry.startAt) : ''}" required>
-</div>
-<div class="form-group">
-<label for="endTime">Čas konce (HH:MM)</label>
-<input type="time" id="endTime" class="ios-input" value="${entry ? this.formatTimeForInput(entry.endAt) : ''}" required>
-</div>
-<div class="form-group">
-<label for="entryDate">Datum</label>
-<input type="date" id="entryDate" class="ios-input" value="${entry ? this.formatDateForInput(entry.startAt) : this.formatDateForInput(Date.now())}" required>
-</div>
-<div class="form-group">
-<label for="rate">Sazba (/hod)</label>
-<input type="number" id="rate" class="ios-input" value="${entry?.rateAtTime || user.rate}" required>
-</div>
-<button type="submit" class="ios-button primary">${entry ? 'Uložit změny' : 'Přidat záznam'}</button>
-</form>
-`;
-
-const modal = this.showModal(title, content);
-modal.querySelector('#entry-form').onsubmit = e => {
-e.preventDefault();
-const form = e.target;
-const date = form.entryDate.value;
-const startAt = new Date(`${date}T${form.startTime.value}`).getTime();
-let durationMs = this.parseDurationInput(form.durationInput.value);
-let endAt = startAt + durationMs;
-
-if (form.endTime.value) {
-endAt = new Date(`${date}T${form.endTime.value}`).getTime();
-durationMs = endAt - startAt;
-}
-
-if (endAt <= startAt || durationMs <= 0) {
-alert('Čas konce musí být po čase začátku a doba kladná.');
-return;
-}
-
-const entryData = {
-userId: user.id,
-taskName: form.taskName.value,
-startAt,
-endAt,
-durationMs,
-rateAtTime: parseFloat(form.rate.value)
-};
-
-if (entry) {
-this.app.updateEntry(entryId, entryData);
-} else {
-this.app.addEntry(entryData);
-}
-this.closeAllModals();
-};
-}
-
-showUserModal(userId = null) {
-const user = userId ? this.stateManager.getState().users.find(u => u.id === userId) : null;
-const title = user ? 'Upravit uživatele' : 'Přidat uživatele';
-
-const content = `
-<form id="user-form">
-<div class="form-group">
-<label for="userName">Jméno</label>
-<input type="text" id="userName" class="ios-input" value="${user?.name || ''}" required>
-</div>
-<div class="form-group">
-<label for="userRate">Hodinová sazba</label>
-<input type="number" id="userRate" class="ios-input" value="${user?.rate || ''}" required>
-</div>
-<div class="form-group">
-<label for="userColor">Barva</label>
-<input type="color" id="userColor" class="ios-input" value="${user?.color || '#39D353'}">
-</div>
-<button type="submit" class="ios-button primary">${user ? 'Uložit změny' : 'Vytvořit uživatele'}</button>
-${user ? '<button type="button" id="delete-user-btn" class="ios-button danger" style="margin-top:10px;">Smazat uživatele</button>' : ''}
-</form>
-`;
-
-const modal = this.showModal(title, content);
-
-modal.querySelector('#user-form').onsubmit = e => {
-e.preventDefault();
-const form = e.target;
-const userData = {
-name: form.userName.value,
-rate: parseFloat(form.userRate.value),
-color: form.userColor.value,
-icon: form.userName.value.charAt(0).toUpperCase(),
-};
-
-if (user) {
-this.app.updateUser(userId, userData);
-} else {
-this.app.addUser(userData);
-}
-this.closeAllModals();
-};
-
-if (user) {
-modal.querySelector('#delete-user-btn').onclick = () => {
-if (confirm(`Opravdu chcete smazat uživatele ${user.name}? Tím se smažou i všechny jeho záznamy.`)) {
-this.app.deleteUser(userId);
-this.closeAllModals();
-}
-};
-}
-}
-
-showRetroStartModal() {
-const content = `
-<form id="retro-start-form">
-<div class="form-group">
-<label for="retroTaskName">Název úkolu (nepovinné)</label>
-<input type="text" id="retroTaskName" class="ios-input">
-</div>
-<div class="form-group">
-<label for="retroStartTime">Čas začátku (HH:MM)</label>
-<input type="time" id="retroStartTime" class="ios-input" value="${this.formatTimeForInput(Date.now())}" required>
-</div>
-<button type="submit" class="ios-button primary">Spustit měření</button>
-</form>
-`;
-const modal = this.showModal('Spustit měření zpětně', content);
-modal.querySelector('#retro-start-form').onsubmit = e => {
-e.preventDefault();
-const form = e.target;
-const taskName = form.retroTaskName.value;
-const startTime = form.retroStartTime.value;
-const [hours, minutes] = startTime.split(':');
-const startDate = new Date();
-startDate.setHours(hours, minutes, 0, 0);
-
-if (startDate.getTime() > Date.now()) {
-alert('Čas začátku nemůže být v budoucnosti.');
-return;
-}
-
-this.app.startTimer(taskName, startDate.getTime());
-this.closeAllModals();
-};
-}
-
-showBackupModal() {
-const content = `
-<p>Zde můžete exportovat všechna svá data do souboru JSON pro zálohu, nebo je importovat zpět.</p>
-<button id="json-export-btn" class="ios-button primary">Exportovat data</button>
-<div class="form-group" style="margin-top: 20px;">
-<label for="json-import-input">Importovat ze souboru</label>
-<input type="file" id="json-import-input" accept=".json" class="ios-input">
-</div>
-`;
-const modal = this.showModal('Záloha a Obnova', content);
-
-modal.querySelector('#json-export-btn').onclick = () => {
-this.app.backupManager.exportToJSON();
-if (this.stateManager.getState().settings.haptics) this.mobileFeatures.vibrate('success');
-};
-
-modal.querySelector('#json-import-input').onchange = async (e) => {
-const file = e.target.files[0];
-if (file) {
-try {
-await this.app.backupManager.importFromJSON(file);
-this.showToast('Data byla úspěšně importována.');
-this.app.initUI();
-this.closeAllModals();
-} catch (err) {
-alert(`Chyba při importu: ${err.message}`);
-}
-}
-};
-}
-
-showToast(message, actionText = null, onAction = null, duration = 4000) {
-const toastId = `toast-${Date.now()}`;
-const toast = document.createElement('div');
-toast.className = 'toast';
-toast.id = toastId;
-
-let html = `<span>${message}</span>`;
-if (actionText && onAction) {
-html += `<button class="toast-undo-btn">${actionText}</button>`;
-}
-toast.innerHTML = html;
-
-this.elements.toastContainer.appendChild(toast);
-
-setTimeout(() => toast.classList.add('show'), 10);
-
-const removeToast = () => {
-toast.classList.remove('show');
-setTimeout(() => toast.remove(), 300);
-};
-
-const timeoutId = setTimeout(removeToast, duration);
-
-if (actionText && onAction) {
-toast.querySelector('button').onclick = () => {
-clearTimeout(timeoutId);
-onAction();
-removeToast();
-};
-}
-}
-
-updateDiagnostics() {
-const stateSize = (localStorage.getItem(DB_KEY)?.length / 1024).toFixed(2) || 0;
-const backupDate = localStorage.getItem(AUTO_BACKUP_KEY) ? new Date(JSON.parse(localStorage.getItem(AUTO_BACKUP_KEY)).lastBackupDateISO).toLocaleString() : 'Nikdy';
-this.elements.diagInfo.innerHTML = `
-Velikost dat: ${stateSize} KB<br>
-Poslední autozáloha: ${backupDate}<br>
-Verze schématu: ${this.stateManager.getState().schemaVersion}
-`;
-}
-
-// -- Pomocné funkce --
-formatDuration(ms, showSeconds = true) {
-if (ms < 0) ms = 0;
-const totalSeconds = Math.floor(ms / 1000);
-const hours = Math.floor(totalSeconds / 3600);
-const minutes = Math.floor((totalSeconds % 3600) / 60);
-const seconds = totalSeconds % 60;
-
-if (showSeconds) {
-return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-} else {
-return `${hours}h ${String(minutes).padStart(2, '0')}m`;
-}
-}
-
-formatTimeForInput(timestamp) {
-const date = new Date(timestamp);
-return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
-}
-
-formatDateForInput(timestamp) {
-const date = new Date(timestamp);
-const year = date.getFullYear();
-const month = String(date.getMonth() + 1).padStart(2, '0');
-const day = String(date.getDate()).padStart(2, '0');
-return `${year}-${month}-${day}`;
-}
-
-debounce(func, delay) {
-let timeout;
-return function(...args) {
-const context = this;
-clearTimeout(timeout);
-timeout = setTimeout(() => func.apply(context, args), delay);
-};
-}
-}
-
-/**
- * @class App
- * @description Hlavní třída aplikace, která vše spojuje.
- */
-class App {
-constructor() {
-this.stateManager = new StateManager();
-this.pwaManager = new PWA_Manager();
-this.notificationManager = new NotificationManager();
-this.mobileFeatures = new EnhancedMobileFeatures();
-this.wakeLockManager = new WakeLockManager();
-this.backupManager = new BackupManager(this.stateManager);
-this.uiManager = new UIManager(this);
-this.chartManager = new ChartManager(this.stateManager);
-this.timerInterval = null;
-}
-
-async init() {
-await this.pwaManager.init();
-await this.notificationManager.init();
-
-this.stateManager.loadState();
-this.backupManager.autoBackup();
-
-this.initUI();
-this.pullToRefreshManager = new PullToRefreshManager(this.uiManager.elements.mainContent, async () => {
-this.uiManager.updateFullUI();
-});
-
-this.startTimerInterval();
-this.checkMonthlyExport();
-}
-
-initUI() {
-this.uiManager.initEventListeners();
-this.uiManager.updateFullUI();
-}
-
-startTimerInterval() {
-if (this.timerInterval) clearInterval(this.timerInterval);
-this.timerInterval = setInterval(() => {
-this.uiManager.updateTimerDisplay();
-this.checkRunningTimerNotification();
-}, 1000);
-}
-
-// -- Logika časovače --
-toggleTimer() {
-const user = this.stateManager.getActiveUser();
-if (!user) return;
-const timer = this.stateManager.getTimerForUser(user.id);
-if (timer.running) {
-this.stopTimer();
-} else {
-this.startTimer();
-}
-}
-
-startTimer(taskName = null, startTime = null) {
-const user = this.stateManager.getActiveUser();
-if (!user) return;
-
-const showTaskPrompt = taskName === null && startTime === null;
-
-const finalTaskName = showTaskPrompt ? prompt('Zadejte název úkolu (nepovinné):', '') : taskName;
-
-const timer = this.stateManager.getTimerForUser(user.id);
-timer.running = true;
-timer.startAt = startTime || Date.now();
-timer.pausedAccumMs = 0;
-timer.currentTaskName = finalTaskName || '';
-
-this.stateManager.saveStateThrottled();
-this.uiManager.updateFullUI();
-this.wakeLockManager.request();
-if (this.stateManager.getState().settings.notifications) {
-this.notificationManager.notify('Časovač spuštěn', `Sledování času pro úkol "${timer.currentTaskName}" začalo.`);
-}
-}
-
-pauseTimer() {
-const user = this.stateManager.getActiveUser();
-if (!user) return;
-const timer = this.stateManager.getTimerForUser(user.id);
-if (!timer.running) return;
-
-timer.pausedAccumMs += Date.now() - timer.startAt;
-timer.running = false;
-timer.startAt = null;
-
-this.stateManager.saveStateThrottled();
-this.uiManager.updateFullUI();
-this.wakeLockManager.release();
-}
-
-resumeTimer() {
-const user = this.stateManager.getActiveUser();
-if (!user) return;
-const timer = this.stateManager.getTimerForUser(user.id);
-if (timer.running) return;
-
-timer.running = true;
-timer.startAt = Date.now();
-
-this.stateManager.saveStateThrottled();
-this.uiManager.updateFullUI();
-this.wakeLockManager.request();
-}
-
-stopTimer() {
-const user = this.stateManager.getActiveUser();
-if (!user) return;
-const timer = this.stateManager.getTimerForUser(user.id);
-
-let durationMs = timer.pausedAccumMs;
-if (timer.running) {
-durationMs += Date.now() - timer.startAt;
-}
-
-if (durationMs < 1000) { // Neukládat záznamy kratší než 1s
-this.resetTimer();
-return;
-}
-
-const endAt = Date.now();
-const startAt = endAt - durationMs;
-
-const entryData = {
-userId: user.id,
-taskName: timer.currentTaskName || 'Bez názvu',
-startAt: startAt,
-endAt: endAt,
-durationMs: durationMs,
-rateAtTime: user.rate,
-};
-this.addEntry(entryData);
-
-if (this.stateManager.getState().settings.notifications) {
-this.notificationManager.notify('Časovač zastaven', `Záznam "${entryData.taskName}" byl uložen.`);
-}
-this.resetTimer();
-this.wakeLockManager.release();
-}
-
-resetTimer() {
-const user = this.stateManager.getActiveUser();
-if (!user) return;
-const timer = this.stateManager.getTimerForUser(user.id);
-timer.running = false;
-timer.startAt = null;
-timer.pausedAccumMs = 0;
-timer.currentTaskName = '';
-this.stateManager.saveStateThrottled();
-this.uiManager.updateFullUI();
-}
-
-// -- Správa dat --
-addEntry(entryData) {
-this.stateManager.addEntry(entryData);
-this.uiManager.updateFullUI();
-}
-
-updateEntry(entryId, updates) {
-this.stateManager.updateEntry(entryId, updates);
-this.uiManager.updateFullUI();
-}
-
-deleteEntryWithUndo(entryId) {
-const deletedEntry = this.stateManager.deleteEntry(entryId);
-if (deletedEntry) {
-this.uiManager.updateFullUI();
-this.uiManager.showToast(
-'Záznam smazán.',
-'Vrátit zpět',
-() => {
-this.stateManager.reAddEntry(deletedEntry);
-this.uiManager.updateFullUI();
-}
-);
-}
-}
-
-addUser(userData) {
-const newUser = {
-id: this.stateManager.generateId(),
-active: true,
-...userData
-};
-const state = this.stateManager.getState();
-state.users.push(newUser);
-if (!state.activeUserId) {
-state.activeUserId = newUser.id;
-}
-this.stateManager.saveStateThrottled();
-this.uiManager.updateFullUI();
-}
-
-updateUser(userId, updates) {
-const state = this.stateManager.getState();
-const userIndex = state.users.findIndex(u => u.id === userId);
-if (userIndex > -1) {
-state.users[userIndex] = { ...state.users[userIndex], ...updates };
-this.stateManager.saveStateThrottled();
-this.uiManager.updateFullUI();
-}
-}
-
-deleteUser(userId) {
-const state = this.stateManager.getState();
-state.users = state.users.filter(u => u.id !== userId);
-state.entries = state.entries.filter(e => e.userId !== userId);
-delete state.timers[userId];
-
-if (state.activeUserId === userId) {
-state.activeUserId = state.users.length > 0 ? state.users[0].id : null;
-}
-
-this.stateManager.saveStateThrottled();
-this.uiManager.updateFullUI();
-}
-
-// -- Export a nástroje --
-exportCSV() {
-const state = this.stateManager.getState();
-const user = this.stateManager.getActiveUser();
-if (!user) return;
-
-const headers = ['Datum', 'Úkol', 'Začátek', 'Konec', 'Doba trvání (hodiny)', 'Sazba', 'Výdělek', 'Měna'];
-const rows = state.entries
-.filter(e => e.userId === user.id)
-.map(e => {
-const earnings = (e.durationMs / 3600000) * e.rateAtTime;
-return [
-new Date(e.startAt).toLocaleDateString(),
-`"${e.taskName.replace(/"/g, '""')}"`,
-new Date(e.startAt).toLocaleTimeString(),
-new Date(e.endAt).toLocaleTimeString(),
-(e.durationMs / 3600000).toFixed(4),
-e.rateAtTime,
-earnings.toFixed(2),
-state.settings.currency
-].join(',');
-});
-
-const csvContent = "data:text/csv;charset=utf-8," + [headers.join(','), ...rows].join('\n');
-const encodedUri = encodeURI(csvContent);
-const link = document.createElement("a");
-link.setAttribute("href", encodedUri);
-link.setAttribute("download", `worktime_export_${user.name}.csv`);
-document.body.appendChild(link);
-link.click();
-document.body.removeChild(link);
-}
-
-checkMonthlyExport() {
-const today = new Date();
-if (today.getDate() === 1) {
-const lastNotificationKey = `monthlyExportNotif_${today.getFullYear()}_${today.getMonth()}`;
-if (!localStorage.getItem(lastNotificationKey)) {
-if (this.stateManager.getState().settings.notifications) {
-this.notificationManager.notify(
-'Měsíční export je připraven',
-'Klepnutím přejdete do nastavení a stáhnete si přehled za minulý měsíc.',
-{ actions: [{ action: 'export', title: 'Exportovat' }] }
-);
-}
-localStorage.setItem(lastNotificationKey, 'true');
-}
-}
-}
-
-checkRunningTimerNotification() {
-const user = this.stateManager.getActiveUser();
-if (!user) return;
-const timer = this.stateManager.getTimerForUser(user.id);
-
-if(timer.running && this.stateManager.getState().settings.notifications) {
-const elapsedMinutes = (Date.now() - timer.startAt) / 60000;
-// Připomenutí každých 60 minut
-if (elapsedMinutes > 0 && elapsedMinutes % 60 < 1/60) {
-this.notificationManager.notify(
-'Časovač stále běží',
-`Už pracujete ${Math.round(elapsedMinutes)} minut. Nezapomeňte si dát pauzu!`
-);
-}
-}
-}
-
-generateDemoData() {
-if (!confirm('Tímto přepíšete stávající data. Pokračovat?')) return;
-
-this.stateManager.state = this.stateManager.getDefaultState();
-const user1 = { id: 'user1', name: 'Tomáš', rate: 550, color: '#0d8eff', icon: 'T', active: true };
-const user2 = { id: 'user2', name: 'Jana', rate: 600, color: '#ff453a', icon: 'J', active: true };
-this.stateManager.state.users = [user1, user2];
-this.stateManager.state.activeUserId = 'user1';
-
-const entries = [];
-for (let i = 0; i < 30; i++) {
-const date = new Date();
-date.setDate(date.getDate() - i);
-for (let j = 0; j < Math.random() * 4; j++) {
-const startHour = 8 + Math.floor(Math.random() * 8);
-date.setHours(startHour, Math.floor(Math.random()*60), 0, 0);
-const startAt = date.getTime();
-const durationMs = (0.5 + Math.random() * 3) * 3600000;
-const endAt = startAt + durationMs;
-
-entries.push({
-id: this.stateManager.generateId(),
-userId: Math.random() > 0.5 ? 'user1' : 'user2',
-taskName: `Demo úkol ${i}-${j}`,
-category: Math.random() > 0.5 ? 'Práce' : 'Projekt',
-startAt, endAt, durationMs,
-rateAtTime: Math.random() > 0.5 ? 550 : 600,
-createdAt: Date.now(), updatedAt: Date.now(), history: []
-});
-}
-}
-this.stateManager.state.entries = entries;
-this.stateManager.saveState();
-this.initUI();
-this.uiManager.showToast('Demo data byla vygenerována.');
-}
-
-clearAllData() {
-if (confirm('OPRAVDU chcete smazat VŠECHNA data? Tato akce je nevratná.')) {
-localStorage.removeItem(DB_KEY);
-localStorage.removeItem(AUTO_BACKUP_KEY);
-window.location.reload();
-}
-}
-}
-
-// -- Spuštění aplikace --
-const app = new App();
-app.init();
-
-});
-</script>
+    <header class="app-header">
+        <h1 class="header-title">⏱️ WorkTime Tracker</h1>
+    </header>
+
+    <main class="main-content">
+        <!-- Aktuální stav timeru -->
+        <section class="timer-section">
+            <div class="status-indicator status-stopped" id="timer-status">
+                <span>⏸️</span>
+                <span>Zastaveno</span>
+            </div>
+            <div class="current-time" id="current-time">00:00:00</div>
+            
+            <div class="timer-controls">
+                <button class="btn btn-primary" id="start-btn">
+                    <span>▶️</span>
+                    <span>Spustit</span>
+                </button>
+                <button class="btn btn-secondary" id="pause-btn" disabled>
+                    <span>⏸️</span>
+                    <span>Pozastavit</span>
+                </button>
+                <button class="btn btn-danger" id="stop-btn" disabled>
+                    <span>⏹️</span>
+                    <span>Zastavit</span>
+                </button>
+            </div>
+
+            <div class="progress-bar">
+                <div class="progress-fill" id="work-progress"></div>
+            </div>
+        </section>
+
+        <!-- Aktuální úkol -->
+        <section class="section">
+            <h2 class="section-title">
+                <span>📝</span>
+                <span>Aktuální úkol</span>
+            </h2>
+            <div class="form-group">
+                <label class="form-label" for="project-select">Projekt:</label>
+                <select class="form-input" id="project-select">
+                    <option value="">Vyberte projekt...</option>
+                    <option value="web-dev">Vývoj webu</option>
+                    <option value="design">Design</option>
+                    <option value="meeting">Schůzky</option>
+                    <option value="admin">Administrativa</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="task-description">Popis úkolu:</label>
+                <input type="text" class="form-input" id="task-description" 
+                       placeholder="Na čem právě pracujete?">
+            </div>
+        </section>
+
+        <!-- Dnešní statistiky -->
+        <section class="section">
+            <h2 class="section-title">
+                <span>📊</span>
+                <span>Dnešní statistiky</span>
+            </h2>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <span class="stat-value" id="today-total">0:00</span>
+                    <span class="stat-label">Celkový čas</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-value" id="today-sessions">0</span>
+                    <span class="stat-label">Relace</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-value" id="today-breaks">0:00</span>
+                    <span class="stat-label">Přestávky</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-value" id="productivity-score">0%</span>
+                    <span class="stat-label">Produktivita</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Výdělky -->
+        <section class="section">
+            <h2 class="section-title">
+                <span>💰</span>
+                <span>Výdělky</span>
+            </h2>
+            <div class="form-group">
+                <label class="form-label" for="hourly-rate">Hodinová sazba (Kč):</label>
+                <input type="number" class="form-input" id="hourly-rate" 
+                       placeholder="200" min="0" step="10" value="200">
+            </div>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <span class="stat-value" id="today-earnings">0 Kč</span>
+                    <span class="stat-label">Dnes</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-value" id="month-earnings">0 Kč</span>
+                    <span class="stat-label">Tento měsíc</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Nastavení -->
+        <section class="section">
+            <h2 class="section-title">
+                <span>⚙️</span>
+                <span>Nastavení</span>
+            </h2>
+            <ul class="settings-list">
+                <li class="settings-item">
+                    <span>Notifikace</span>
+                    <label class="toggle">
+                        <input type="checkbox" id="notifications-toggle">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </li>
+                <li class="settings-item">
+                    <span>Automatická záloha</span>
+                    <label class="toggle">
+                        <input type="checkbox" id="backup-toggle">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </li>
+                <li class="settings-item">
+                    <span>Tmavý režim</span>
+                    <label class="toggle">
+                        <input type="checkbox" id="theme-toggle">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </li>
+            </ul>
+        </section>
+
+        <!-- Diagnostika -->
+        <section class="section">
+            <h2 class="section-title">
+                <span>🔧</span>
+                <span>Diagnostika</span>
+            </h2>
+            <ul class="settings-list">
+                <li class="settings-item">
+                    <span>Velikost úložiště</span>
+                    <span id="storage-size">Načítání...</span>
+                </li>
+                <li class="settings-item">
+                    <span>Poslední záloha</span>
+                    <span id="last-backup">Nikdy</span>
+                </li>
+                <li class="settings-item">
+                    <span>Verze</span>
+                    <span>1.0.0</span>
+                </li>
+            </ul>
+            <div style="margin-top: 1rem;">
+                <button class="btn btn-secondary" id="export-data">
+                    <span>📤</span>
+                    <span>Exportovat data</span>
+                </button>
+            </div>
+        </section>
+    </main>
+
+    <!-- Plovoucí akce -->
+    <div class="floating-actions">
+        <button class="fab" id="quick-start" title="Rychlé spuštění">
+            ⚡
+        </button>
+    </div>
+
+    <script src="statistics.js"></script>
+    <script>
+        class WorkTimeTracker {
+            constructor() {
+                this.isRunning = false;
+                this.startTime = null;
+                this.totalTime = 0;
+                this.currentSession = 0;
+                this.sessions = JSON.parse(localStorage.getItem('worktime-sessions') || '[]');
+                this.currentSessionData = null;
+                
+                this.init();
+                this.loadData();
+                this.updateDisplay();
+                this.updateStats();
+                this.checkStorageSize();
+            }
+
+            init() {
+                // Event listeners
+                document.getElementById('start-btn').addEventListener('click', () => this.start());
+                document.getElementById('pause-btn').addEventListener('click', () => this.pause());
+                document.getElementById('stop-btn').addEventListener('click', () => this.stop());
+                document.getElementById('quick-start').addEventListener('click', () => this.quickStart());
+                document.getElementById('export-data').addEventListener('click', () => this.exportData());
+                document.getElementById('hourly-rate').addEventListener('input', () => this.updateEarnings());
+                
+                // Toggles
+                document.getElementById('notifications-toggle').addEventListener('change', (e) => {
+                    this.saveSettings('notifications', e.target.checked);
+                    if (e.target.checked) {
+                        this.requestNotificationPermission();
+                    }
+                });
+                
+                document.getElementById('theme-toggle').addEventListener('change', (e) => {
+                    this.toggleTheme(e.target.checked);
+                });
+
+                // Auto-save při změně projektu nebo úkolu
+                document.getElementById('project-select').addEventListener('change', () => this.saveData());
+                document.getElementById('task-description').addEventListener('input', () => this.saveData());
+
+                // Update každou sekundu
+                setInterval(() => {
+                    if (this.isRunning) {
+                        this.updateDisplay();
+                        this.updateStats();
+                    }
+                }, 1000);
+
+                // Keyboard shortcuts
+                document.addEventListener('keydown', (e) => {
+                    if (e.code === 'Space' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'SELECT') {
+                        e.preventDefault();
+                        this.toggleTimer();
+                    }
+                });
+            }
+
+            start() {
+                if (!this.isRunning) {
+                    this.isRunning = true;
+                    this.startTime = Date.now() - this.currentSession;
+                    
+                    // Create new session data
+                    this.currentSessionData = {
+                        start: new Date().toISOString(),
+                        project: document.getElementById('project-select').value,
+                        task: document.getElementById('task-description').value,
+                        break: 0
+                    };
+                    
+                    this.updateButtons();
+                    this.updateStatus('working', 'Pracuje');
+                    this.showToast('Timer spuštěn');
+                    this.sendNotification('Timer spuštěn', 'Začal jste pracovat');
+                    this.saveData();
+                }
+            }
+
+            pause() {
+                if (this.isRunning) {
+                    this.isRunning = false;
+                    this.currentSession = Date.now() - this.startTime;
+                    
+                    // Add break time tracking
+                    if (this.currentSessionData) {
+                        this.currentSessionData.breakStart = Date.now();
+                    }
+                    
+                    this.updateButtons();
+                    this.updateStatus('paused', 'Pozastaveno');
+                    this.showToast('Timer pozastaven');
+                    this.sendNotification('Timer pozastaven', 'Začala přestávka');
+                    this.saveData();
+                }
+            }
+
+            stop() {
+                if (this.isRunning || this.currentSession > 0) {
+                    // Calculate break time if paused
+                    if (this.currentSessionData && this.currentSessionData.breakStart) {
+                        this.currentSessionData.break += Math.floor((Date.now() - this.currentSessionData.breakStart) / 60000);
+                    }
+                    
+                    // Complete session data
+                    if (this.currentSessionData) {
+                        this.currentSessionData.end = new Date().toISOString();
+                        this.sessions.push(this.currentSessionData);
+                        localStorage.setItem('worktime-sessions', JSON.stringify(this.sessions));
+                    }
+                    
+                    this.totalTime += this.currentSession;
+                    this.isRunning = false;
+                    this.startTime = null;
+                    this.currentSession = 0;
+                    this.currentSessionData = null;
+                    
+                    this.updateButtons();
+                    this.updateStatus('stopped', 'Zastaveno');
+                    this.showToast('Timer zastaven a uložen');
+                    this.sendNotification('Timer zastaven', 'Relace byla uložena');
+                    this.updateStats();
+                    this.saveData();
+                }
+            }
+
+            toggleTimer() {
+                if (this.isRunning) {
+                    this.pause();
+                } else {
+                    this.start();
+                }
+            }
+
+            quickStart() {
+                if (!this.isRunning) {
+                    this.start();
+                } else {
+                    this.stop();
+                }
+            }
+
+            updateButtons() {
+                const startBtn = document.getElementById('start-btn');
+                const pauseBtn = document.getElementById('pause-btn');
+                const stopBtn = document.getElementById('stop-btn');
+
+                if (this.isRunning) {
+                    startBtn.disabled = true;
+                    pauseBtn.disabled = false;
+                    stopBtn.disabled = false;
+                } else {
+                    startBtn.disabled = false;
+                    pauseBtn.disabled = true;
+                    stopBtn.disabled = this.currentSession === 0;
+                }
+            }
+
+            updateStatus(type, text) {
+                const status = document.getElementById('timer-status');
+                status.className = `status-indicator status-${type}`;
+                
+                const icons = {
+                    working: '🔥',
+                    paused: '⏸️',
+                    stopped: '⏹️'
+                };
+                
+                status.innerHTML = `<span>${icons[type]}</span><span>${text}</span>`;
+            }
+
+            updateDisplay() {
+                const currentTime = this.isRunning ? 
+                    Date.now() - this.startTime : 
+                    this.currentSession;
+
+                document.getElementById('current-time').textContent = this.formatTime(currentTime);
+                
+                // Progress bar (example: 8 hours = 100%)
+                const progressPercent = Math.min(((this.totalTime + currentTime) / (8 * 60 * 60 * 1000)) * 100, 100);
+                document.getElementById('work-progress').style.width = progressPercent + '%';
+                
+                this.updateEarnings();
+            }
+
+            updateStats() {
+                if (window.worktimeStats) {
+                    const rate = parseFloat(document.getElementById('hourly-rate').value) || 200;
+                    const stats = window.worktimeStats.calc(this.sessions, rate);
+                    
+                    // Add current session to today's stats if running
+                    const currentTime = this.isRunning ? Date.now() - this.startTime : this.currentSession;
+                    const currentMinutes = Math.floor(currentTime / 60000);
+                    
+                    document.getElementById('today-total').textContent = this.formatMinutes(stats.today_total_min + currentMinutes);
+                    document.getElementById('today-sessions').textContent = stats.today_sessions + (this.currentSessionData ? 1 : 0);
+                    document.getElementById('today-breaks').textContent = this.formatMinutes(stats.today_breaks);
+                    
+                    // Calculate productivity score
+                    const totalWithCurrent = stats.today_total_min + currentMinutes;
+                    const productivity = Math.min(Math.round((totalWithCurrent / 480) * 100), 100); // 8 hours = 480 minutes = 100%
+                    document.getElementById('productivity-score').textContent = productivity + '%';
+                }
+            }
+
+            updateEarnings() {
+                const hourlyRate = parseFloat(document.getElementById('hourly-rate').value) || 200;
+                
+                if (window.worktimeStats) {
+                    const stats = window.worktimeStats.calc(this.sessions, hourlyRate);
+                    const currentTime = this.isRunning ? Date.now() - this.startTime : this.currentSession;
+                    const currentEarnings = (currentTime / (1000 * 60 * 60)) * hourlyRate;
+                    
+                    document.getElementById('today-earnings').textContent = Math.round(stats.today_earnings + currentEarnings) + ' Kč';
+                    document.getElementById('month-earnings').textContent = Math.round(stats.month_earnings + currentEarnings) + ' Kč';
+                } else {
+                    // Fallback
+                    const totalHours = (this.totalTime + this.currentSession) / (1000 * 60 * 60);
+                    const todayEarnings = Math.round(totalHours * hourlyRate);
+                    document.getElementById('today-earnings').textContent = `${todayEarnings} Kč`;
+                }
+            }
+
+            formatTime(ms) {
+                const seconds = Math.floor(ms / 1000);
+                const hours = Math.floor(seconds / 3600);
+                const minutes = Math.floor((seconds % 3600) / 60);
+                const remainingSeconds = seconds % 60;
+
+                return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+            }
+
+            formatMinutes(minutes) {
+                const hours = Math.floor(minutes / 60);
+                const mins = minutes % 60;
+                return `${hours}:${mins.toString().padStart(2, '0')}`;
+            }
+
+            showToast(message) {
+                const toast = document.createElement('div');
+                toast.className = 'toast';
+                toast.textContent = message;
+                document.body.appendChild(toast);
+
+                setTimeout(() => {
+                    toast.remove();
+                }, 3000);
+            }
+
+            async requestNotificationPermission() {
+                if ('Notification' in window && Notification.permission === 'default') {
+                    await Notification.requestPermission();
+                }
+            }
+
+            sendNotification(title, body) {
+                const settings = JSON.parse(localStorage.getItem('worktime-settings') || '{}');
+                if (settings.notifications && 'Notification' in window && Notification.permission === 'granted') {
+                    new Notification(title, {
+                        body: body,
+                        icon: 'image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIGZpbGw9Im5vbmUiIHZpZXdCb3g9IjAgMCAyNCAyNCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMTIgNmE2IDYgMCAwIDAtNiA2YzAgN2wtMyAzaDEwaC0xYTEgMSAwIDAgMC0xIDFoNGExIDEgMCAwIDAtMS0xaC0xbC0zLTNjMC03YTYgNiAwIDAgMC02LTZ6TTEyIDIyYTIgMiAwIDAgMS0yLTJoNGEyIDIgMCAwIDEtMiAyeiIgZmlsbD0iIzM5RDM1MyIvPjwvc3ZnPg=='
+                    });
+                }
+            }
+
+            saveData() {
+                const data = {
+                    isRunning: this.isRunning,
+                    startTime: this.startTime,
+                    totalTime: this.totalTime,
+                    currentSession: this.currentSession,
+                    project: document.getElementById('project-select').value,
+                    task: document.getElementById('task-description').value,
+                    hourlyRate: document.getElementById('hourly-rate').value,
+                    currentSessionData: this.currentSessionData,
+                    lastSave: Date.now()
+                };
+
+                localStorage.setItem('worktime-data', JSON.stringify(data));
+                
+                // Update backup timestamp
+                document.getElementById('last-backup').textContent = new Date().toLocaleString('cs-CZ');
+            }
+
+            loadData() {
+                const saved = localStorage.getItem('worktime-data');
+                if (saved) {
+                    const data = JSON.parse(saved);
+                    
+                    this.totalTime = data.totalTime || 0;
+                    this.currentSession = data.currentSession || 0;
+                    this.currentSessionData = data.currentSessionData || null;
+                    
+                    document.getElementById('project-select').value = data.project || '';
+                    document.getElementById('task-description').value = data.task || '';
+                    document.getElementById('hourly-rate').value = data.hourlyRate || '200';
+                    
+                    // Pokud byl timer spuštěný při zavření, obnovit stav
+                    if (data.isRunning && data.startTime) {
+                        this.isRunning = true;
+                        this.startTime = data.startTime;
+                        this.updateStatus('working', 'Pracuje');
+                    }
+                }
+                
+                // Load settings
+                const settings = JSON.parse(localStorage.getItem('worktime-settings') || '{}');
+                document.getElementById('notifications-toggle').checked = settings.notifications || false;
+                document.getElementById('backup-toggle').checked = settings.backup || false;
+                document.getElementById('theme-toggle').checked = settings.darkMode || false;
+                
+                this.updateButtons();
+            }
+
+            saveSettings(key, value) {
+                const settings = JSON.parse(localStorage.getItem('worktime-settings') || '{}');
+                settings[key] = value;
+                localStorage.setItem('worktime-settings', JSON.stringify(settings));
+            }
+
+            toggleTheme(isDark) {
+                if (isDark) {
+                    document.documentElement.style.setProperty('--bg', '#0D1117');
+                    document.documentElement.style.setProperty('--text', '#E6EDF3');
+                    document.documentElement.style.setProperty('--surface', '#161B22');
+                } else {
+                    document.documentElement.style.setProperty('--bg', '#FFFFFF');
+                    document.documentElement.style.setProperty('--text', '#1F2328');
+                    document.documentElement.style.setProperty('--surface', '#F6F8FA');
+                }
+                this.saveSettings('darkMode', isDark);
+            }
+
+            async checkStorageSize() {
+                if ('storage' in navigator && 'estimate' in navigator.storage) {
+                    const estimate = await navigator.storage.estimate();
+                    const usedMB = (estimate.usage / 1024 / 1024).toFixed(2);
+                    document.getElementById('storage-size').textContent = `${usedMB} MB`;
+                }
+            }
+
+            exportData() {
+                const data = {
+                    sessions: this.sessions,
+                    totalTime: this.totalTime,
+                    settings: JSON.parse(localStorage.getItem('worktime-settings') || '{}'),
+                    exportDate: new Date().toISOString()
+                };
+
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `worktime-export-${new Date().toISOString().split('T')[0]}.json`;
+                a.click();
+                URL.revokeObjectURL(url);
+
+                this.showToast('Data exportována');
+            }
+        }
+
+        // Spustit aplikaci
+        document.addEventListener('DOMContentLoaded', () => {
+            window.workTimeTracker = new WorkTimeTracker();
+        });
+
+        // Service Worker registrace
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('./service-worker.js')
+                .then(reg => console.log('SW registered'))
+                .catch(err => console.error('SW registration failed'));
+        }
+    </script>
 </body>
 </html>
